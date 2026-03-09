@@ -1,0 +1,303 @@
+import { access, mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+
+export const CAPABILITIES = ["catalog", "meta", "stream", "subtitles", "plugin_catalog"] as const;
+export type Capability = (typeof CAPABILITIES)[number];
+export type Preset = Capability;
+export type Language = "ts" | "js";
+export const DEFAULT_PRESET: Preset = "meta";
+export const DEFAULT_SDK_VERSION = "^0.1.0";
+
+export interface ScaffoldOptions {
+  targetDir: string;
+  projectName: string;
+  language: Language;
+  preset: Preset;
+  extraCapabilities?: Capability[];
+  sdkVersion?: string;
+}
+
+function sortedCapabilities(values: Capability[]): Capability[] {
+  const unique = Array.from(new Set(values));
+  return CAPABILITIES.filter((capability) => unique.includes(capability));
+}
+
+async function ensureTargetDoesNotExist(targetDir: string): Promise<void> {
+  try {
+    await access(targetDir);
+    throw new Error(`Target directory already exists: ${targetDir}`);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return;
+    }
+    throw error;
+  }
+}
+
+function makePackageJson(name: string, language: Language, sdkVersion: string): string {
+  const scripts =
+    language === "ts"
+      ? {
+          dev: "tsx watch src/server.ts",
+          build: "tsc -p tsconfig.json",
+          start: "node dist/server.js",
+          test: "vitest run",
+        }
+      : {
+          dev: "node --watch src/server.js",
+          build: "echo \"No build step for JavaScript template\"",
+          start: "node src/server.js",
+          test: "vitest run",
+        };
+
+  const packageJson = {
+    name,
+    version: "0.1.0",
+    private: true,
+    type: "module",
+    scripts,
+    dependencies: {
+      "@streamhub/media-plugin-sdk": sdkVersion,
+    },
+    devDependencies:
+      language === "ts"
+        ? {
+            "@types/node": "^24.6.0",
+            tsx: "^4.20.5",
+            typescript: "^5.9.2",
+            vitest: "^2.1.9",
+          }
+        : {
+            vitest: "^2.1.9",
+          },
+  };
+
+  return `${JSON.stringify(packageJson, null, 2)}\n`;
+}
+
+function resourceBlock(capability: Capability): string {
+  switch (capability) {
+    case "catalog":
+      return `catalog: {
+      endpoints: [
+        {
+          id: "top",
+          name: "Top",
+          mediaTypes: ["movie"],
+          filters: [{ key: "genre", valueType: "string" }],
+        },
+      ],
+      handler: async () => ({
+        items: [],
+      }),
+    },`;
+    case "meta":
+      return `meta: {
+      mediaTypes: ["movie"],
+      includes: ["videos", "links"],
+      handler: async () => ({
+        item: null,
+      }),
+    },`;
+    case "stream":
+      return `stream: {
+      mediaTypes: ["movie"],
+      deliveryKinds: ["direct_url"],
+      supportsInlineSubtitles: true,
+      handler: async () => ({
+        streams: [],
+      }),
+    },`;
+    case "subtitles":
+      return `subtitles: {
+      mediaTypes: ["movie", "episode"],
+      defaultLanguages: ["en"],
+      handler: async (request, { settings }) => {
+        const configuredLanguages = Array.isArray(settings.languages)
+          ? settings.languages
+          : [];
+        const languagePreferences =
+          configuredLanguages.length > 0 ? configuredLanguages : (request.languagePreferences ?? []);
+
+        void languagePreferences;
+        void settings.includeHI;
+
+        return {
+          subtitles: [],
+        };
+      },
+    },`;
+    case "plugin_catalog":
+      return `pluginCatalog: {
+      endpoints: [
+        {
+          id: "featured",
+          name: "Featured",
+          pluginKinds: ["catalog", "meta", "stream", "subtitles"],
+          tags: ["official"],
+        },
+      ],
+      handler: async () => ({
+        plugins: [],
+      }),
+    },`;
+    default:
+      return "";
+  }
+}
+
+function makeInstallBlock(preset: Preset): string {
+  if (preset !== "subtitles") {
+    return "";
+  }
+
+  return `  install: {
+    title: "Subtitle Settings",
+    description: "Configure subtitle defaults before installing this plugin.",
+    fields: [
+      settings.multiSelect("languages", {
+        label: "Languages",
+        options: [
+          { label: "English", value: "en" },
+          { label: "Greek", value: "el" },
+          { label: "Spanish", value: "es" },
+        ],
+        defaultValue: ["en"],
+      }),
+      settings.checkbox("includeHI", {
+        label: "Include hearing impaired",
+        defaultValue: true,
+      }),
+    ],
+  },
+`;
+}
+
+function makePluginFile(name: string, preset: Preset, capabilities: Capability[]): string {
+  const resources = capabilities.map(resourceBlock).join("\n    ");
+  const install = makeInstallBlock(preset);
+  const importSpec = install.length > 0 ? "definePlugin, settings" : "definePlugin";
+  const installBlock = install.length > 0 ? `${install}` : "";
+
+  return `import { ${importSpec} } from "@streamhub/media-plugin-sdk";
+
+export const plugin = definePlugin({
+  plugin: {
+    id: "com.example.${name}",
+    name: "${name}",
+    version: "0.1.0",
+    description: "Generated plugin scaffold",
+  },
+${installBlock}  resources: {
+    ${resources}
+  },
+});
+`;
+}
+
+function makeServerFile(language: Language): string {
+  const pluginImport = language === "ts" ? "./plugin" : "./plugin.js";
+  return `import { serve } from "@streamhub/media-plugin-sdk";
+import { plugin } from "${pluginImport}";
+
+const { url } = await serve(plugin, {
+  port: Number(process.env.PORT ?? 7000),
+});
+
+console.log("Plugin manifest:", url);
+console.log("Plugin installer:", url.replace("/manifest.json", "/"));
+`;
+}
+
+function makeVitestFile(language: Language): string {
+  const pluginImport = language === "ts" ? "../src/plugin" : "../src/plugin.js";
+  return `import { describe, expect, it } from "vitest";
+import { createServer } from "@streamhub/media-plugin-sdk";
+import { plugin } from "${pluginImport}";
+
+describe("scaffold smoke", () => {
+  it("serves manifest and studio config", async () => {
+    const app = createServer(plugin, { frontend: false });
+
+    const manifestResponse = await app.request("/manifest.json");
+    expect(manifestResponse.status).toBe(200);
+
+    const studioResponse = await app.request("/studio-config.json");
+    expect(studioResponse.status).toBe(200);
+  });
+});
+`;
+}
+
+const tsConfig = `{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "declaration": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "types": ["node"]
+  },
+  "include": ["src"]
+}
+`;
+
+function makeReadme(projectName: string, preset: Preset, capabilities: Capability[]): string {
+  const capabilitiesList = capabilities.map((capability) => `- ${capability}`).join("\n");
+  const endpointLines = [
+    "- GET /manifest.json",
+    "- GET /studio-config.json",
+    ...capabilities.map((capability) => `- POST /${capability}`),
+  ].join("\n");
+
+  return `# ${projectName}
+
+Generated with create-media-plugin.
+
+Preset: \`${preset}\`
+
+## Scripts
+
+- npm run dev
+- npm run build
+- npm run start
+- npm run test
+
+## Implemented Capabilities
+
+${capabilitiesList}
+
+## Endpoints
+
+${endpointLines}
+`;
+}
+
+export async function scaffoldProject(options: ScaffoldOptions): Promise<void> {
+  const capabilities = sortedCapabilities([options.preset, ...(options.extraCapabilities ?? [])]);
+  const sdkVersion = (options.sdkVersion ?? DEFAULT_SDK_VERSION).trim() || DEFAULT_SDK_VERSION;
+
+  await ensureTargetDoesNotExist(options.targetDir);
+
+  const srcDir = path.join(options.targetDir, "src");
+  const testDir = path.join(options.targetDir, "test");
+
+  await mkdir(srcDir, { recursive: true });
+  await mkdir(testDir, { recursive: true });
+
+  await writeFile(path.join(options.targetDir, "package.json"), makePackageJson(options.projectName, options.language, sdkVersion));
+  await writeFile(path.join(options.targetDir, "README.md"), makeReadme(options.projectName, options.preset, capabilities));
+
+  if (options.language === "ts") {
+    await writeFile(path.join(options.targetDir, "tsconfig.json"), tsConfig);
+    await writeFile(path.join(srcDir, "plugin.ts"), makePluginFile(options.projectName, options.preset, capabilities));
+    await writeFile(path.join(srcDir, "server.ts"), makeServerFile("ts"));
+    await writeFile(path.join(testDir, "plugin.test.ts"), makeVitestFile("ts"));
+  } else {
+    await writeFile(path.join(srcDir, "plugin.js"), makePluginFile(options.projectName, options.preset, capabilities));
+    await writeFile(path.join(srcDir, "server.js"), makeServerFile("js"));
+    await writeFile(path.join(testDir, "plugin.test.js"), makeVitestFile("js"));
+  }
+}
