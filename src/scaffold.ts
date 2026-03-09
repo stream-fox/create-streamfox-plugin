@@ -249,7 +249,7 @@ function makeReadme(projectName: string, preset: Preset, capabilities: Capabilit
   const endpointLines = [
     "- GET /manifest.json",
     "- GET /studio-config.json",
-    ...capabilities.map((capability) => `- POST /${capability}`),
+    ...capabilities.map((capability) => `- GET /${capability}`),
   ].join("\n");
 
   return `# ${projectName}
