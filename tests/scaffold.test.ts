@@ -28,10 +28,15 @@ describe("scaffoldProject", () => {
 
     const pluginFile = await readFile(path.join(target, "src", "plugin.ts"), "utf8");
     expect(pluginFile).toContain("definePlugin");
+    expect(pluginFile).toContain('from "@streamfox/plugin-sdk"');
 
     const serverFile = await readFile(path.join(target, "src", "server.ts"), "utf8");
+    expect(serverFile).toContain('from "@streamfox/plugin-sdk"');
     expect(serverFile).toContain('url.replace("/manifest", "/")');
     expect(serverFile).not.toContain("manifest.json");
+
+    const testFile = await readFile(path.join(target, "test", "plugin.test.ts"), "utf8");
+    expect(testFile).toContain('from "@streamfox/plugin-sdk"');
 
     const readme = await readFile(path.join(target, "README.md"), "utf8");
     expect(readme).toContain("GET /manifest");
