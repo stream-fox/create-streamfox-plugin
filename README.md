@@ -1,8 +1,8 @@
 # create-streamfox-plugin
 
-Standalone CLI for scaffolding StreamFox plugin projects.
+CLI for scaffolding StreamFox plugin projects.
 
-## Global install
+## Install
 
 ```bash
 npm i -g create-streamfox-plugin
@@ -14,10 +14,21 @@ npm i -g create-streamfox-plugin
 create-streamfox-plugin
 ```
 
-Or non-interactive:
+Non-interactive:
 
 ```bash
 create-streamfox-plugin my-plugin --yes
+```
+
+Example:
+
+```bash
+create-streamfox-plugin streamfox-opensubs \
+  --ts \
+  --preset subtitles \
+  --capabilities meta \
+  --sdk-version ^0.1.0 \
+  --yes
 ```
 
 ## Options
@@ -28,18 +39,9 @@ create-streamfox-plugin my-plugin --yes
 - `--sdk-version <range>` (default: `^0.1.0`)
 - `--yes`
 
-Example:
+The generated project depends on `@streamfox/plugin-sdk`.
 
-```bash
-create-streamfox-plugin streamfox-opensubs \
-  --ts \
-  --preset meta \
-  --capabilities stream \
-  --sdk-version ^0.1.0 \
-  --yes
-```
-
-## Local development
+## Development
 
 ```bash
 npm install
@@ -47,7 +49,7 @@ npm run build
 npm test
 ```
 
-To test globally from local source:
+To test the CLI from local source:
 
 ```bash
 npm link
