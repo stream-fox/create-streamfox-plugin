@@ -1,23 +1,23 @@
-# create-media-plugin
+# create-streamfox-plugin
 
-Standalone CLI for scaffolding StreamHub plugin projects.
+Standalone CLI for scaffolding StreamFox plugin projects.
 
 ## Global install
 
 ```bash
-npm i -g create-media-plugin
+npm i -g create-streamfox-plugin
 ```
 
 ## Usage
 
 ```bash
-create-media-plugin
+create-streamfox-plugin
 ```
 
 Or non-interactive:
 
 ```bash
-create-media-plugin my-plugin --yes
+create-streamfox-plugin my-plugin --yes
 ```
 
 ## Options
@@ -31,7 +31,7 @@ create-media-plugin my-plugin --yes
 Example:
 
 ```bash
-create-media-plugin streamhub-opensubs \
+create-streamfox-plugin streamfox-opensubs \
   --ts \
   --preset meta \
   --capabilities stream \
@@ -51,5 +51,5 @@ To test globally from local source:
 
 ```bash
 npm link
-create-media-plugin demo-plugin --yes
+create-streamfox-plugin demo-plugin --yes
 ```

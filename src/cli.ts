@@ -40,15 +40,15 @@ function parseCapabilitiesList(input: string): Capability[] {
 const program = new Command();
 
 program
-  .name("create-media-plugin")
-  .description("Scaffold StreamHub plugin projects with modern JS/TS presets")
+  .name("create-streamfox-plugin")
+  .description("Scaffold StreamFox plugin projects with modern JS/TS presets")
   .showHelpAfterError()
   .argument("[directory]", "output directory")
   .option("--ts", "use TypeScript template")
   .option("--js", "use JavaScript template")
   .option("--preset <preset>", `plugin preset: ${capabilitiesLabel()}`, parsePreset)
   .option("--capabilities <capabilities>", "extra capabilities as comma-separated list", parseCapabilitiesList)
-  .option("--sdk-version <range>", "@streamhub/media-plugin-sdk version/range", DEFAULT_SDK_VERSION)
+  .option("--sdk-version <range>", "@streamfox/plugin-sdk version/range", DEFAULT_SDK_VERSION)
   .option("--yes", "skip prompts and use defaults")
   .action(
     async (

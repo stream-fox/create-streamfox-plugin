@@ -57,7 +57,7 @@ function makePackageJson(name: string, language: Language, sdkVersion: string): 
     type: "module",
     scripts,
     dependencies: {
-      "@streamhub/media-plugin-sdk": sdkVersion,
+      "@streamfox/plugin-sdk": sdkVersion,
     },
     devDependencies:
       language === "ts"
@@ -179,14 +179,14 @@ function makePluginFile(name: string, preset: Preset, capabilities: Capability[]
   const importSpec = install.length > 0 ? "definePlugin, settings" : "definePlugin";
   const installBlock = install.length > 0 ? `${install}` : "";
 
-  return `import { ${importSpec} } from "@streamhub/media-plugin-sdk";
+  return `import { ${importSpec} } from "@streamfox/plugin-sdk";
 
 export const plugin = definePlugin({
   plugin: {
     id: "com.example.${name}",
     name: "${name}",
     version: "0.1.0",
-    description: "Generated plugin scaffold",
+    description: "Generated StreamFox plugin scaffold",
   },
 ${installBlock}  resources: {
     ${resources}
@@ -197,7 +197,7 @@ ${installBlock}  resources: {
 
 function makeServerFile(language: Language): string {
   const pluginImport = language === "ts" ? "./plugin" : "./plugin.js";
-  return `import { serve } from "@streamhub/media-plugin-sdk";
+  return `import { serve } from "@streamfox/plugin-sdk";
 import { plugin } from "${pluginImport}";
 
 const { url } = await serve(plugin, {
@@ -212,7 +212,7 @@ console.log("Plugin installer:", url.replace("/manifest", "/"));
 function makeVitestFile(language: Language): string {
   const pluginImport = language === "ts" ? "../src/plugin" : "../src/plugin.js";
   return `import { describe, expect, it } from "vitest";
-import { createServer } from "@streamhub/media-plugin-sdk";
+import { createServer } from "@streamfox/plugin-sdk";
 import { plugin } from "${pluginImport}";
 
 describe("scaffold smoke", () => {
@@ -272,7 +272,7 @@ function makeReadme(projectName: string, preset: Preset, capabilities: Capabilit
 
   return `# ${projectName}
 
-Generated with create-media-plugin.
+Generated with create-streamfox-plugin.
 
 Preset: \`${preset}\`
 

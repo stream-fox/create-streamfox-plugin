@@ -1,10 +1,10 @@
 {
-  "name": "create-media-plugin",
+  "name": "create-streamfox-plugin",
   "version": "0.1.0",
-  "description": "Standalone CLI to scaffold StreamHub media plugin projects",
+  "description": "Standalone CLI to scaffold StreamFox plugin projects",
   "type": "module",
   "bin": {
-    "create-media-plugin": "./dist/cli.cjs"
+    "create-streamfox-plugin": "./dist/cli.cjs"
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

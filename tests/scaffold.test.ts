@@ -7,7 +7,7 @@ import { scaffoldProject } from "../src/scaffold";
 
 describe("scaffoldProject", () => {
   it("creates a TypeScript scaffold with registry sdk dependency", async () => {
-    const base = mkdtempSync(path.join(tmpdir(), "create-media-plugin-"));
+    const base = mkdtempSync(path.join(tmpdir(), "create-streamfox-plugin-"));
     const target = path.join(base, "demo-plugin");
 
     await scaffoldProject({
@@ -24,7 +24,7 @@ describe("scaffoldProject", () => {
     expect(existsSync(path.join(target, "src", "server.ts"))).toBe(true);
 
     const packageJson = await readFile(path.join(target, "package.json"), "utf8");
-    expect(packageJson).toContain("\"@streamhub/media-plugin-sdk\": \"^0.1.0\"");
+    expect(packageJson).toContain("\"@streamfox/plugin-sdk\": \"^0.1.0\"");
 
     const pluginFile = await readFile(path.join(target, "src", "plugin.ts"), "utf8");
     expect(pluginFile).toContain("definePlugin");
@@ -41,7 +41,7 @@ describe("scaffoldProject", () => {
   });
 
   it("uses multiSelect installer settings for subtitles preset", async () => {
-    const base = mkdtempSync(path.join(tmpdir(), "create-media-plugin-"));
+    const base = mkdtempSync(path.join(tmpdir(), "create-streamfox-plugin-"));
     const target = path.join(base, "demo-subtitles");
 
     await scaffoldProject({
