@@ -28,6 +28,16 @@ describe("scaffoldProject", () => {
 
     const pluginFile = await readFile(path.join(target, "src", "plugin.ts"), "utf8");
     expect(pluginFile).toContain("definePlugin");
+
+    const serverFile = await readFile(path.join(target, "src", "server.ts"), "utf8");
+    expect(serverFile).toContain('url.replace("/manifest", "/")');
+    expect(serverFile).not.toContain("manifest.json");
+
+    const readme = await readFile(path.join(target, "README.md"), "utf8");
+    expect(readme).toContain("GET /manifest");
+    expect(readme).toContain("GET /studio-config");
+    expect(readme).toContain("GET /meta/:mediaType/:itemID");
+    expect(readme).toContain("GET /subtitles/:mediaType/:itemID");
   });
 
   it("uses multiSelect installer settings for subtitles preset", async () => {

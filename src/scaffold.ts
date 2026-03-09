@@ -205,7 +205,7 @@ const { url } = await serve(plugin, {
 });
 
 console.log("Plugin manifest:", url);
-console.log("Plugin installer:", url.replace("/manifest.json", "/"));
+console.log("Plugin installer:", url.replace("/manifest", "/"));
 `;
 }
 
@@ -219,10 +219,10 @@ describe("scaffold smoke", () => {
   it("serves manifest and studio config", async () => {
     const app = createServer(plugin, { frontend: false });
 
-    const manifestResponse = await app.request("/manifest.json");
+    const manifestResponse = await app.request("/manifest");
     expect(manifestResponse.status).toBe(200);
 
-    const studioResponse = await app.request("/studio-config.json");
+    const studioResponse = await app.request("/studio-config");
     expect(studioResponse.status).toBe(200);
   });
 });
@@ -246,10 +246,28 @@ const tsConfig = `{
 
 function makeReadme(projectName: string, preset: Preset, capabilities: Capability[]): string {
   const capabilitiesList = capabilities.map((capability) => `- ${capability}`).join("\n");
+
+  const endpointForCapability = (capability: Capability): string => {
+    switch (capability) {
+      case "catalog":
+        return "/catalog/:mediaType/:catalogID";
+      case "meta":
+        return "/meta/:mediaType/:itemID";
+      case "stream":
+        return "/stream/:mediaType/:itemID";
+      case "subtitles":
+        return "/subtitles/:mediaType/:itemID";
+      case "plugin_catalog":
+        return "/plugin_catalog/:catalogID/:pluginKind";
+      default:
+        return `/${capability}`;
+    }
+  };
+
   const endpointLines = [
-    "- GET /manifest.json",
-    "- GET /studio-config.json",
-    ...capabilities.map((capability) => `- GET /${capability}`),
+    "- GET /manifest",
+    "- GET /studio-config",
+    ...capabilities.map((capability) => `- GET ${endpointForCapability(capability)}`),
   ].join("\n");
 
   return `# ${projectName}
