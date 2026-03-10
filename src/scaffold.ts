@@ -204,8 +204,8 @@ const { url } = await serve(plugin, {
   port: Number(process.env.PORT ?? 7000),
 });
 
-console.log("Plugin manifest:", url);
 console.log("Plugin installer:", url.replace("/manifest", "/"));
+console.log("Plugin manifest:", url);
 `;
 }
 
