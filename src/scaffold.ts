@@ -13,6 +13,7 @@ export interface ScaffoldOptions {
   projectName: string;
   language: Language;
   preset: Preset;
+  advanced?: boolean;
   extraCapabilities?: Capability[];
   sdkVersion?: string;
 }
@@ -75,7 +76,7 @@ function makePackageJson(name: string, language: Language, sdkVersion: string): 
   return `${JSON.stringify(packageJson, null, 2)}\n`;
 }
 
-function resourceBlock(capability: Capability): string {
+function resourceBlock(capability: Capability, advanced: boolean): string {
   switch (capability) {
     case "catalog":
       return `catalog: {
@@ -96,16 +97,54 @@ function resourceBlock(capability: Capability): string {
       mediaTypes: ["movie"],
       includes: ["videos", "links"],
       handler: async () => ({
-        item: null,
+        item: ${advanced ? `{
+          summary: {
+            id: { namespace: "imdb", value: "tt1254207" },
+            mediaType: "movie",
+            title: "Big Buck Bunny",
+            links: [],
+          },
+          defaultVideoID: "main",
+          trailers: [{ transport: { kind: "youtube", id: "aqz-KE-bpKQ" } }],
+          videos: [
+            {
+              id: "main",
+              title: "Main",
+              streams: [{ transport: { kind: "http", url: "https://example.com/video.mp4" } }],
+            },
+          ],
+        }` : "null"},
       }),
     },`;
     case "stream":
       return `stream: {
       mediaTypes: ["movie"],
-      deliveryKinds: ["direct_url"],
-      supportsInlineSubtitles: true,
+      supportedTransports: ${advanced ? `["http", "torrent", "usenet", "archive", "youtube"]` : `["http"]`},
       handler: async () => ({
-        streams: [],
+        streams: [
+          {
+            transport: { kind: "http", url: "https://example.com/video.mp4", mode: "stream" },
+            hints: {
+              notWebReady: true,
+              proxyHeaders: { request: { "User-Agent": "StreamFox" } },
+            },
+          },
+${advanced ? `          {
+            transport: { kind: "torrent", infoHash: "abcdef", peerDiscovery: ["tracker:udp://tracker.example.com:80"] },
+            selection: { fileIndex: 0 },
+          },
+          {
+            transport: { kind: "usenet", nzbURL: "https://example.com/file.nzb", servers: ["nntps://user:pass@news.example.com:563/4"] },
+          },
+          {
+            transport: {
+              kind: "archive",
+              format: "zip",
+              files: [{ url: "https://example.com/archive.zip", bytes: 1024 }],
+            },
+            selection: { fileMustInclude: "movie.mkv" },
+          },
+` : ""}        ],
       }),
     },`;
     case "subtitles":
@@ -138,7 +177,21 @@ function resourceBlock(capability: Capability): string {
         },
       ],
       handler: async () => ({
-        plugins: [],
+        plugins: [
+          {
+            id: "com.example.recommended",
+            name: "Recommended",
+            version: "1.0.0",
+            pluginKinds: ["catalog", "meta"],
+            distribution: {
+              transport: "https",
+              manifestURL: "https://plugins.example.com/recommended/manifest",
+            },
+            manifestSnapshot: {
+              plugin: { id: "com.example.recommended" },
+            },
+          },
+        ],
       }),
     },`;
     default:
@@ -152,6 +205,7 @@ function makeInstallBlock(preset: Preset): string {
   }
 
   return `  install: {
+    configurationRequired: true,
     title: "Subtitle Settings",
     description: "Configure subtitle defaults before installing this plugin.",
     fields: [
@@ -173,8 +227,8 @@ function makeInstallBlock(preset: Preset): string {
 `;
 }
 
-function makePluginFile(name: string, preset: Preset, capabilities: Capability[]): string {
-  const resources = capabilities.map(resourceBlock).join("\n    ");
+function makePluginFile(name: string, preset: Preset, capabilities: Capability[], advanced: boolean): string {
+  const resources = capabilities.map((capability) => resourceBlock(capability, advanced)).join("\n    ");
   const install = makeInstallBlock(preset);
   const importSpec = install.length > 0 ? "definePlugin, settings" : "definePlugin";
   const installBlock = install.length > 0 ? `${install}` : "";
@@ -200,12 +254,18 @@ function makeServerFile(language: Language): string {
   return `import { serve } from "@streamfox/plugin-sdk";
 import { plugin } from "${pluginImport}";
 
-const { url } = await serve(plugin, {
+const { url, installURL, launchURL } = await serve(plugin, {
   port: Number(process.env.PORT ?? 7000),
+  integration: {
+    installScheme: "streamfox",
+    launchBaseURL: "https://streamfox.app/#",
+    autoOpen: "none",
+  },
 });
 
-console.log("Plugin installer:", url.replace("/manifest", "/"));
 console.log("Plugin manifest:", url);
+console.log("Plugin installer deeplink:", installURL);
+console.log("Plugin launch URL:", launchURL);
 `;
 }
 
@@ -244,7 +304,7 @@ const tsConfig = `{
 }
 `;
 
-function makeReadme(projectName: string, preset: Preset, capabilities: Capability[]): string {
+function makeReadme(projectName: string, preset: Preset, capabilities: Capability[], advanced: boolean): string {
   const capabilitiesList = capabilities.map((capability) => `- ${capability}`).join("\n");
 
   const endpointForCapability = (capability: Capability): string => {
@@ -275,6 +335,7 @@ function makeReadme(projectName: string, preset: Preset, capabilities: Capabilit
 Generated with create-streamfox-plugin.
 
 Preset: \`${preset}\`
+Advanced template: \`${advanced ? "enabled" : "disabled"}\`
 
 ## Scripts
 
@@ -287,6 +348,12 @@ Preset: \`${preset}\`
 
 ${capabilitiesList}
 
+## Stream Model
+
+- Unified transport model via \`stream.transport\`
+- Capability declaration via \`resources.stream.supportedTransports\`
+- Optional selection controls via \`stream.selection\`
+
 ## Endpoints
 
 ${endpointLines}
@@ -296,6 +363,7 @@ ${endpointLines}
 export async function scaffoldProject(options: ScaffoldOptions): Promise<void> {
   const capabilities = sortedCapabilities([options.preset, ...(options.extraCapabilities ?? [])]);
   const sdkVersion = (options.sdkVersion ?? DEFAULT_SDK_VERSION).trim() || DEFAULT_SDK_VERSION;
+  const advanced = options.advanced ?? false;
 
   await ensureTargetDoesNotExist(options.targetDir);
 
@@ -306,15 +374,15 @@ export async function scaffoldProject(options: ScaffoldOptions): Promise<void> {
   await mkdir(testDir, { recursive: true });
 
   await writeFile(path.join(options.targetDir, "package.json"), makePackageJson(options.projectName, options.language, sdkVersion));
-  await writeFile(path.join(options.targetDir, "README.md"), makeReadme(options.projectName, options.preset, capabilities));
+  await writeFile(path.join(options.targetDir, "README.md"), makeReadme(options.projectName, options.preset, capabilities, advanced));
 
   if (options.language === "ts") {
     await writeFile(path.join(options.targetDir, "tsconfig.json"), tsConfig);
-    await writeFile(path.join(srcDir, "plugin.ts"), makePluginFile(options.projectName, options.preset, capabilities));
+    await writeFile(path.join(srcDir, "plugin.ts"), makePluginFile(options.projectName, options.preset, capabilities, advanced));
     await writeFile(path.join(srcDir, "server.ts"), makeServerFile("ts"));
     await writeFile(path.join(testDir, "plugin.test.ts"), makeVitestFile("ts"));
   } else {
-    await writeFile(path.join(srcDir, "plugin.js"), makePluginFile(options.projectName, options.preset, capabilities));
+    await writeFile(path.join(srcDir, "plugin.js"), makePluginFile(options.projectName, options.preset, capabilities, advanced));
     await writeFile(path.join(srcDir, "server.js"), makeServerFile("js"));
     await writeFile(path.join(testDir, "plugin.test.js"), makeVitestFile("js"));
   }

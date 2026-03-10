@@ -48,6 +48,7 @@ program
   .option("--js", "use JavaScript template")
   .option("--preset <preset>", `plugin preset: ${capabilitiesLabel()}`, parsePreset)
   .option("--capabilities <capabilities>", "extra capabilities as comma-separated list", parseCapabilitiesList)
+  .option("--advanced", "generate advanced capability examples")
   .option("--sdk-version <range>", "@streamfox/plugin-sdk version/range", DEFAULT_SDK_VERSION)
   .option("--yes", "skip prompts and use defaults")
   .action(
@@ -59,6 +60,7 @@ program
         yes?: boolean;
         preset?: Preset;
         capabilities?: Capability[];
+        advanced?: boolean;
         sdkVersion?: string;
       },
     ) => {
@@ -71,6 +73,7 @@ program
         language: options.ts ? "ts" : options.js ? "js" : "ts",
         preset: options.preset ?? DEFAULT_PRESET,
         extraCapabilities: options.capabilities ?? [],
+        advanced: options.advanced ?? false,
         sdkVersion: options.sdkVersion ?? DEFAULT_SDK_VERSION,
       };
 
@@ -80,6 +83,7 @@ program
       let language = promptDefaults.language as Language;
       let preset = promptDefaults.preset;
       let extraCapabilities = promptDefaults.extraCapabilities;
+      let advanced = promptDefaults.advanced;
       let sdkVersion = promptDefaults.sdkVersion;
 
       if (shouldPrompt) {
@@ -118,6 +122,12 @@ program
               hint: "Space to select",
             },
             {
+              type: "confirm",
+              name: "advanced",
+              message: "Generate advanced capability examples?",
+              initial: advanced,
+            },
+            {
               type: "text",
               name: "sdkVersion",
               message: "SDK dependency version/range",
@@ -135,6 +145,7 @@ program
         language = answers.language;
         preset = (answers.preset ?? promptDefaults.preset) as Preset;
         extraCapabilities = (answers.extraCapabilities ?? []) as Capability[];
+        advanced = Boolean(answers.advanced ?? promptDefaults.advanced);
         sdkVersion = answers.sdkVersion ?? promptDefaults.sdkVersion;
       }
 
@@ -147,6 +158,7 @@ program
         language,
         preset,
         extraCapabilities,
+        advanced,
         sdkVersion,
       });
 

@@ -16,6 +16,7 @@ describe("scaffoldProject", () => {
       language: "ts",
       preset: "subtitles",
       extraCapabilities: ["meta"],
+      advanced: true,
       sdkVersion: "^0.1.0",
     });
 
@@ -32,7 +33,8 @@ describe("scaffoldProject", () => {
 
     const serverFile = await readFile(path.join(target, "src", "server.ts"), "utf8");
     expect(serverFile).toContain('from "@streamfox/plugin-sdk"');
-    expect(serverFile).toContain('url.replace("/manifest", "/")');
+    expect(serverFile).toContain("installURL");
+    expect(serverFile).toContain("launchURL");
     expect(serverFile).not.toContain("manifest.json");
 
     const testFile = await readFile(path.join(target, "test", "plugin.test.ts"), "utf8");
@@ -43,6 +45,8 @@ describe("scaffoldProject", () => {
     expect(readme).toContain("GET /studio-config");
     expect(readme).toContain("GET /meta/:mediaType/:itemID");
     expect(readme).toContain("GET /subtitles/:mediaType/:itemID");
+    expect(readme).toContain("supportedTransports");
+    expect(readme).toContain("Advanced template: `enabled`");
   });
 
   it("uses multiSelect installer settings for subtitles preset", async () => {
@@ -54,11 +58,13 @@ describe("scaffoldProject", () => {
       projectName: "demo-subtitles",
       language: "ts",
       preset: "subtitles",
+      advanced: true,
       sdkVersion: "^0.1.0",
     });
 
     const pluginFile = await readFile(path.join(target, "src", "plugin.ts"), "utf8");
     expect(pluginFile).toContain('settings.multiSelect("languages"');
     expect(pluginFile).toContain("Array.isArray(settings.languages)");
+    expect(pluginFile).toContain("configurationRequired: true");
   });
 });
