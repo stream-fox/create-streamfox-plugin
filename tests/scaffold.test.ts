@@ -16,7 +16,7 @@ describe("scaffoldProject", () => {
       language: "ts",
       capabilities: ["subtitles", "meta"],
       advanced: true,
-      sdkVersion: "^0.4.0",
+      sdkVersion: "^0.5.0",
     });
 
     expect(existsSync(path.join(target, "package.json"))).toBe(true);
@@ -28,7 +28,7 @@ describe("scaffoldProject", () => {
       path.join(target, "package.json"),
       "utf8",
     );
-    expect(packageJson).toContain('"@streamfox/plugin-sdk": "^0.4.0"');
+    expect(packageJson).toContain('"@streamfox/plugin-sdk": "^0.5.0"');
     expect(packageJson).not.toContain("prettier");
     expect(packageJson).not.toContain('"format"');
     expect(packageJson).not.toContain('"format:check"');
@@ -77,7 +77,7 @@ describe("scaffoldProject", () => {
       language: "ts",
       capabilities: ["meta", "subtitles"],
       advanced: true,
-      sdkVersion: "^0.4.0",
+      sdkVersion: "^0.5.0",
     });
 
     const pluginFile = await readFile(
@@ -100,7 +100,7 @@ describe("scaffoldProject", () => {
       language: "ts",
       capabilities: ["catalog"],
       advanced: true,
-      sdkVersion: "^0.4.0",
+      sdkVersion: "^0.5.0",
     });
 
     const pluginFile = await readFile(
@@ -115,13 +115,14 @@ describe("scaffoldProject", () => {
     expect(pluginFile).toContain("commonCatalogFilters");
     expect(pluginFile).toContain('id: "browse"');
     expect(pluginFile).toContain('filters.select("language"');
-    expect(pluginFile).toContain('filters.range("year")');
+    expect(pluginFile).toContain('filters.intOrRange("year")');
     expect(pluginFile).toContain('sorts.desc("popularity"');
     expect(pluginFile).toContain('sortSetRefs: ["browseSorts"]');
 
     const readme = await readFile(path.join(target, "README.md"), "utf8");
     expect(readme).toContain("GET /catalog/movie/browse?language=ja");
     expect(readme).toContain("GET /catalog/movie/browse?year=2024");
+    expect(readme).toContain("GET /catalog/movie/browse?year=2000..2024");
     expect(readme).toContain("GET /catalog/movie/browse?orderBy=popular");
     expect(readme).toContain("filterSets");
     expect(readme).toContain("filters.*");

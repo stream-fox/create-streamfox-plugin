@@ -12,7 +12,7 @@ export type Capability = (typeof CAPABILITIES)[number];
 export type Preset = Capability;
 export type Language = "ts" | "js";
 export const DEFAULT_PRESET: Preset = "meta";
-export const DEFAULT_SDK_VERSION = "^0.4.0";
+export const DEFAULT_SDK_VERSION = "^0.5.0";
 
 export interface ScaffoldOptions {
   targetDir: string;
@@ -152,7 +152,7 @@ ${
           mediaTypes: ["movie"],
           filterSetRefs: ["commonCatalogFilters"],
           sortSetRefs: ["browseSorts"],
-          filters: [filters.range("year")],
+          filters: [filters.intOrRange("year")],
           paging: { defaultPageSize: 20, maxPageSize: 50 },
         },
       ],
@@ -466,6 +466,7 @@ ${capabilitiesList}
 - Keep variable filters in the query string, for example:
   - \`GET /catalog/movie/browse?language=ja\`
   - \`GET /catalog/movie/browse?year=2024\`
+  - \`GET /catalog/movie/browse?year=2000..2024\`
   - \`GET /catalog/movie/browse?query=matrix\`
   - \`GET /catalog/movie/browse?orderBy=popular\`
 - Use shared \`filterSets\`, \`sortSets\`, \`filters.*\`, and \`sorts.*\` helpers when defining catalog controls

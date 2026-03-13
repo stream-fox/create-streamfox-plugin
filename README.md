@@ -6,6 +6,7 @@ Generated projects target the current `@streamfox/plugin-sdk` contract:
 
 - unified stream transport model (`supportedTransports` + `stream.transport`)
 - richer catalog filters with shared `filterSets` and `filters.*` helpers
+- exact-or-range numeric catalog filters such as `year=2024` or `year=2000..2024`
 - richer catalog ordering with shared `sortSets` and `sorts.*` helpers
 - optional installer config with `configurationRequired`
 - serve integration URLs (`url`, `installURL`, `launchURL`)
@@ -52,7 +53,7 @@ create-streamfox-plugin my-plugin --yes
 | `--preset <preset>`      | enum          | `meta`                 | Legacy/compat primary template hint. Interactive mode now asks for capabilities directly.  |
 | `--capabilities <a,b,c>` | csv enum list | `meta`                 | Selected capabilities. One of: `catalog`, `meta`, `stream`, `subtitles`, `plugin_catalog`. |
 | `--advanced`             | flag          | `false`                | Generate richer examples (torrent/usenet/archive/trailers/distribution).                   |
-| `--sdk-version <range>`  | string        | `^0.4.0`               | Dependency range for `@streamfox/plugin-sdk`.                                              |
+| `--sdk-version <range>`  | string        | `^0.5.0`               | Dependency range for `@streamfox/plugin-sdk`.                                              |
 | `--yes`                  | flag          | `false`                | Skip prompts and use provided/default values.                                              |
 | `-v, --version`          | flag          | no                     | Display the current CLI version.                                                           |
 
@@ -65,7 +66,7 @@ create-streamfox-plugin streamfox-opensubs \
   --ts \
   --capabilities subtitles,meta,stream \
   --advanced \
-  --sdk-version ^0.4.0 \
+  --sdk-version ^0.5.0 \
   --yes
 ```
 
