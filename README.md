@@ -11,12 +11,24 @@ Generated projects target the current `@streamfox/plugin-sdk` contract:
 ## Install
 
 ```bash
-npm i -g create-streamfox-plugin
+npm i -g @streamfox/create-streamfox-plugin
+```
+
+The installed command stays:
+
+```bash
+create-streamfox-plugin
 ```
 
 ## Usage
 
 Interactive:
+
+```bash
+npx @streamfox/create-streamfox-plugin
+```
+
+Or after global install:
 
 ```bash
 create-streamfox-plugin
@@ -40,6 +52,7 @@ create-streamfox-plugin my-plugin --yes
 | `--advanced`             | flag          | `false`                | Generate richer examples (torrent/usenet/archive/trailers/distribution). |
 | `--sdk-version <range>`  | string        | `^0.2.0`               | Dependency range for `@streamfox/plugin-sdk`.                            |
 | `--yes`                  | flag          | `false`                | Skip prompts and use provided/default values.                            |
+| `-v, --version`          | flag          | no                     | Display the current CLI version.                                         |
 
 ## Examples
 

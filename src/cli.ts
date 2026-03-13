@@ -1,6 +1,7 @@
 import path from "node:path";
 import { Command, InvalidArgumentError } from "commander";
 import prompts from "prompts";
+import packageJSON from "../package.json";
 import {
   CAPABILITIES,
   DEFAULT_PRESET,
@@ -45,6 +46,7 @@ const program = new Command();
 
 program
   .name("create-streamfox-plugin")
+  .version(packageJSON.version, "-v, --version", "display the current CLI version")
   .description("Scaffold StreamFox plugin projects with modern JS/TS presets")
   .showHelpAfterError()
   .argument("[directory]", "output directory")
