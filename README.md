@@ -38,7 +38,7 @@ create-streamfox-plugin my-plugin --yes
 | `--preset <preset>`      | enum          | `meta`                 | One of: `catalog`, `meta`, `stream`, `subtitles`, `plugin_catalog`.      |
 | `--capabilities <a,b,c>` | csv enum list | none                   | Adds extra capabilities on top of preset.                                |
 | `--advanced`             | flag          | `false`                | Generate richer examples (torrent/usenet/archive/trailers/distribution). |
-| `--sdk-version <range>`  | string        | `^0.1.0`               | Dependency range for `@streamfox/plugin-sdk`.                            |
+| `--sdk-version <range>`  | string        | `^0.2.0`               | Dependency range for `@streamfox/plugin-sdk`.                            |
 | `--yes`                  | flag          | `false`                | Skip prompts and use provided/default values.                            |
 
 ## Examples
@@ -51,7 +51,7 @@ create-streamfox-plugin streamfox-opensubs \
   --preset subtitles \
   --capabilities meta,stream \
   --advanced \
-  --sdk-version ^0.1.0 \
+  --sdk-version ^0.2.0 \
   --yes
 ```
 

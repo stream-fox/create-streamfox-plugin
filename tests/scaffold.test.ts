@@ -17,7 +17,7 @@ describe("scaffoldProject", () => {
       preset: "subtitles",
       extraCapabilities: ["meta"],
       advanced: true,
-      sdkVersion: "^0.1.0",
+      sdkVersion: "^0.2.0",
     });
 
     expect(existsSync(path.join(target, "package.json"))).toBe(true);
@@ -28,7 +28,7 @@ describe("scaffoldProject", () => {
       path.join(target, "package.json"),
       "utf8",
     );
-    expect(packageJson).toContain('"@streamfox/plugin-sdk": "^0.1.0"');
+    expect(packageJson).toContain('"@streamfox/plugin-sdk": "^0.2.0"');
 
     const pluginFile = await readFile(
       path.join(target, "src", "plugin.ts"),
@@ -71,7 +71,7 @@ describe("scaffoldProject", () => {
       language: "ts",
       preset: "subtitles",
       advanced: true,
-      sdkVersion: "^0.1.0",
+      sdkVersion: "^0.2.0",
     });
 
     const pluginFile = await readFile(
