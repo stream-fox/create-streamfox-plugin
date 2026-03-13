@@ -12,7 +12,7 @@ export type Capability = (typeof CAPABILITIES)[number];
 export type Preset = Capability;
 export type Language = "ts" | "js";
 export const DEFAULT_PRESET: Preset = "meta";
-export const DEFAULT_SDK_VERSION = "^0.5.0";
+export const DEFAULT_SDK_VERSION = "^0.6.0";
 
 export interface ScaffoldOptions {
   targetDir: string;
@@ -163,23 +163,88 @@ ${
     case "meta":
       return `meta: {
       mediaTypes: ["movie"],
-      includes: ["videos", "links"],
+      includes: [
+        "videos",
+        "links",
+        "cast",
+        "directors",
+        "writers",
+        "trailers",
+        "awards",
+        "popularity",
+        "behaviorHints",
+        "similarItems",
+      ],
       handler: async () => ({
         item: ${
           advanced
             ? `{
           summary: {
-            id: { namespace: "imdb", value: "tt1254207" },
+            id: "tt1254207",
             mediaType: "movie",
             title: "Big Buck Bunny",
+            yearLabel: "2008",
+            background: "https://images.example.com/big-buck-bunny-background.png",
+            logoURL: "https://images.example.com/big-buck-bunny-logo.png",
+            releasedAt: "2008-05-30T00:00:00.000Z",
+            runtime: "10 min",
+            slug: "movie/big-buck-bunny-1254207",
+            imdbRating: 6.4,
+            popularity: 0.91,
+            sourceRatings: [
+              { provider: "imdb", rating: 6.4 },
+              { provider: "streamfox", rating: 6.8 },
+            ],
             links: [],
           },
+          background: "https://images.example.com/big-buck-bunny-background.png",
+          releasedAt: "2008-05-30T00:00:00.000Z",
+          dvdReleaseAt: "2008-06-15T00:00:00.000Z",
+          logoURL: "https://images.example.com/big-buck-bunny-logo.png",
+          runtime: "10 min",
+          language: "English",
+          country: "Netherlands",
+          awards: "Open Movie project showcase",
+          slug: "movie/big-buck-bunny-1254207",
+          imdbRating: 6.4,
+          popularity: 0.91,
+          popularityBySource: {
+            streamfox: 0.91,
+            imdb: 0.78,
+          },
+          sourceRatings: [
+            { provider: "imdb", rating: 6.4 },
+            { provider: "streamfox", rating: 6.8 },
+          ],
+          cast: [
+            { name: "Big Buck Bunny", character: "Hero" },
+          ],
+          directors: [
+            { name: "Sacha Goedegebure" },
+          ],
+          writers: [
+            { name: "Sacha Goedegebure" },
+          ],
           defaultVideoID: "main",
+          behaviorHints: {
+            defaultVideoId: "main",
+            hasScheduledVideos: false,
+          },
           trailers: [{ transport: { kind: "youtube", id: "aqz-KE-bpKQ" } }],
+          similarItems: [
+            {
+              id: "tt0472033",
+              mediaType: "movie",
+              title: "Big Buck Bunny Short",
+            },
+          ],
           videos: [
             {
               id: "main",
               title: "Main",
+              releasedAt: "2008-05-30T00:00:00.000Z",
+              firstAiredAt: "2008-05-30T00:00:00.000Z",
+              rating: 6.4,
               streams: [{ transport: { kind: "http", url: "https://example.com/video.mp4" } }],
             },
           ],
@@ -459,6 +524,18 @@ ${capabilitiesList}
 - Unified transport model via \`stream.transport\`
 - Capability declaration via \`resources.stream.supportedTransports\`
 - Optional selection controls via \`stream.selection\`
+
+## Rich Meta Model
+
+- Browse summaries stay lean and can expose \`logoURL\`, \`releasedAt\`, \`slug\`, and \`popularity\`
+- Browse summaries can also expose \`background\`, \`runtime\`, \`yearLabel\`, \`imdbRating\`, and \`sourceRatings\`
+- Detail responses can expose \`country\`, \`language\`, \`awards\`, \`cast\`, \`directors\`, \`writers\`, \`behaviorHints\`, \`similarItems\`, \`imdbRating\`, and \`sourceRatings\`
+- Video entries support both \`releasedAt\` and \`firstAiredAt\` plus optional \`rating\`
+- Use \`trailers\` only; there is no separate \`trailerStreams\` field
+- Use one \`id\` everywhere for titles, similar items, and videos
+- Media/title IDs identify the title itself, for example \`tt1254207\`
+- Video IDs identify the video resource, for example \`main\` or \`tt8599532:1:4\`
+- Recommended episodic video ID format: \`{parentMediaID}:{season}:{episode}\`
 
 ## Catalog Filters
 

@@ -16,7 +16,7 @@ describe("scaffoldProject", () => {
       language: "ts",
       capabilities: ["subtitles", "meta"],
       advanced: true,
-      sdkVersion: "^0.5.0",
+      sdkVersion: "^0.6.0",
     });
 
     expect(existsSync(path.join(target, "package.json"))).toBe(true);
@@ -28,7 +28,7 @@ describe("scaffoldProject", () => {
       path.join(target, "package.json"),
       "utf8",
     );
-    expect(packageJson).toContain('"@streamfox/plugin-sdk": "^0.5.0"');
+    expect(packageJson).toContain('"@streamfox/plugin-sdk": "^0.6.0"');
     expect(packageJson).not.toContain("prettier");
     expect(packageJson).not.toContain('"format"');
     expect(packageJson).not.toContain('"format:check"');
@@ -39,6 +39,24 @@ describe("scaffoldProject", () => {
     );
     expect(pluginFile).toContain("definePlugin");
     expect(pluginFile).toContain('from "@streamfox/plugin-sdk"');
+    expect(pluginFile).toContain("includes: [");
+    expect(pluginFile).toContain('"cast"');
+    expect(pluginFile).toContain('"directors"');
+    expect(pluginFile).toContain('"writers"');
+    expect(pluginFile).toContain('"behaviorHints"');
+    expect(pluginFile).toContain("similarItems:");
+    expect(pluginFile).toContain('id: "tt1254207"');
+    expect(pluginFile).toContain('id: "tt0472033"');
+    expect(pluginFile).toContain("logoURL:");
+    expect(pluginFile).toContain("background:");
+    expect(pluginFile).toContain("dvdReleaseAt:");
+    expect(pluginFile).toContain("runtime:");
+    expect(pluginFile).toContain("yearLabel:");
+    expect(pluginFile).toContain("imdbRating:");
+    expect(pluginFile).toContain("sourceRatings:");
+    expect(pluginFile).toContain("popularityBySource:");
+    expect(pluginFile).toContain("firstAiredAt:");
+    expect(pluginFile).toContain("rating:");
 
     const serverFile = await readFile(
       path.join(target, "src", "server.ts"),
@@ -63,6 +81,12 @@ describe("scaffoldProject", () => {
     expect(readme).toContain("Capabilities: `meta, subtitles`");
     expect(readme).toContain("supportedTransports");
     expect(readme).toContain("Advanced template: `enabled`");
+    expect(readme).toContain("Rich Meta Model");
+    expect(readme).toContain("behaviorHints");
+    expect(readme).toContain("firstAiredAt");
+    expect(readme).toContain("imdbRating");
+    expect(readme).toContain("sourceRatings");
+    expect(readme).toContain("one `id` everywhere");
     expect(readme).toContain("npm run check");
     expect(readme).not.toContain("npm run format");
   });
@@ -77,7 +101,7 @@ describe("scaffoldProject", () => {
       language: "ts",
       capabilities: ["meta", "subtitles"],
       advanced: true,
-      sdkVersion: "^0.5.0",
+      sdkVersion: "^0.6.0",
     });
 
     const pluginFile = await readFile(
@@ -100,7 +124,7 @@ describe("scaffoldProject", () => {
       language: "ts",
       capabilities: ["catalog"],
       advanced: true,
-      sdkVersion: "^0.5.0",
+      sdkVersion: "^0.6.0",
     });
 
     const pluginFile = await readFile(
