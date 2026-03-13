@@ -18,7 +18,8 @@ export interface ScaffoldOptions {
   targetDir: string;
   projectName: string;
   language: Language;
-  preset: Preset;
+  preset?: Preset;
+  capabilities?: Capability[];
   advanced?: boolean;
   extraCapabilities?: Capability[];
   sdkVersion?: string;
@@ -232,8 +233,8 @@ ${
   }
 }
 
-function makeInstallBlock(preset: Preset): string {
-  if (preset !== "subtitles") {
+function makeInstallBlock(capabilities: Capability[]): string {
+  if (!capabilities.includes("subtitles")) {
     return "";
   }
 
@@ -262,14 +263,13 @@ function makeInstallBlock(preset: Preset): string {
 
 function makePluginFile(
   name: string,
-  preset: Preset,
   capabilities: Capability[],
   advanced: boolean,
 ): string {
   const resources = capabilities
     .map((capability) => resourceBlock(capability, advanced))
     .join("\n    ");
-  const install = makeInstallBlock(preset);
+  const install = makeInstallBlock(capabilities);
   const importSpec =
     install.length > 0 ? "definePlugin, settings" : "definePlugin";
   const installBlock = install.length > 0 ? `${install}` : "";
@@ -359,7 +359,6 @@ node_modules
 
 function makeReadme(
   projectName: string,
-  preset: Preset,
   capabilities: Capability[],
   advanced: boolean,
 ): string {
@@ -396,7 +395,7 @@ function makeReadme(
 
 Generated with create-streamfox-plugin.
 
-Preset: \`${preset}\`
+Capabilities: \`${capabilities.join(", ")}\`
 Advanced template: \`${advanced ? "enabled" : "disabled"}\`
 
 ## Scripts
@@ -424,10 +423,12 @@ ${endpointLines}
 }
 
 export async function scaffoldProject(options: ScaffoldOptions): Promise<void> {
-  const capabilities = sortedCapabilities([
-    options.preset,
-    ...(options.extraCapabilities ?? []),
-  ]);
+  const capabilities = options.capabilities
+    ? sortedCapabilities(options.capabilities)
+    : sortedCapabilities([
+        options.preset ?? DEFAULT_PRESET,
+        ...(options.extraCapabilities ?? []),
+      ]);
   const sdkVersion =
     (options.sdkVersion ?? DEFAULT_SDK_VERSION).trim() || DEFAULT_SDK_VERSION;
   const advanced = options.advanced ?? false;
@@ -454,7 +455,7 @@ export async function scaffoldProject(options: ScaffoldOptions): Promise<void> {
   );
   await writeFile(
     path.join(options.targetDir, "README.md"),
-    makeReadme(options.projectName, options.preset, capabilities, advanced),
+    makeReadme(options.projectName, capabilities, advanced),
   );
 
   if (options.language === "ts") {
@@ -463,7 +464,6 @@ export async function scaffoldProject(options: ScaffoldOptions): Promise<void> {
       path.join(srcDir, "plugin.ts"),
       makePluginFile(
         options.projectName,
-        options.preset,
         capabilities,
         advanced,
       ),
@@ -475,7 +475,6 @@ export async function scaffoldProject(options: ScaffoldOptions): Promise<void> {
       path.join(srcDir, "plugin.js"),
       makePluginFile(
         options.projectName,
-        options.preset,
         capabilities,
         advanced,
       ),

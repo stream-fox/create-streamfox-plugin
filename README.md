@@ -47,8 +47,8 @@ create-streamfox-plugin my-plugin --yes
 | `[directory]`            | positional    | `my-media-plugin`      | Output directory.                                                        |
 | `--ts`                   | flag          | `true` (unless `--js`) | Generate TypeScript template.                                            |
 | `--js`                   | flag          | no                     | Generate JavaScript template.                                            |
-| `--preset <preset>`      | enum          | `meta`                 | One of: `catalog`, `meta`, `stream`, `subtitles`, `plugin_catalog`.      |
-| `--capabilities <a,b,c>` | csv enum list | none                   | Adds extra capabilities on top of preset.                                |
+| `--preset <preset>`      | enum          | `meta`                 | Legacy/compat primary template hint. Interactive mode now asks for capabilities directly. |
+| `--capabilities <a,b,c>` | csv enum list | `meta`                 | Selected capabilities. One of: `catalog`, `meta`, `stream`, `subtitles`, `plugin_catalog`. |
 | `--advanced`             | flag          | `false`                | Generate richer examples (torrent/usenet/archive/trailers/distribution). |
 | `--sdk-version <range>`  | string        | `^0.2.0`               | Dependency range for `@streamfox/plugin-sdk`.                            |
 | `--yes`                  | flag          | `false`                | Skip prompts and use provided/default values.                            |
@@ -56,13 +56,12 @@ create-streamfox-plugin my-plugin --yes
 
 ## Examples
 
-Create subtitles preset with advanced examples:
+Create a subtitles + meta + stream plugin with advanced examples:
 
 ```bash
 create-streamfox-plugin streamfox-opensubs \
   --ts \
-  --preset subtitles \
-  --capabilities meta,stream \
+  --capabilities subtitles,meta,stream \
   --advanced \
   --sdk-version ^0.2.0 \
   --yes

@@ -14,8 +14,7 @@ describe("scaffoldProject", () => {
       targetDir: target,
       projectName: "demo-plugin",
       language: "ts",
-      preset: "subtitles",
-      extraCapabilities: ["meta"],
+      capabilities: ["subtitles", "meta"],
       advanced: true,
       sdkVersion: "^0.2.0",
     });
@@ -57,11 +56,12 @@ describe("scaffoldProject", () => {
     expect(readme).toContain("GET /studio-config");
     expect(readme).toContain("GET /meta/:mediaType/:itemID");
     expect(readme).toContain("GET /subtitles/:mediaType/:itemID");
+    expect(readme).toContain("Capabilities: `meta, subtitles`");
     expect(readme).toContain("supportedTransports");
     expect(readme).toContain("Advanced template: `enabled`");
   });
 
-  it("uses multiSelect installer settings for subtitles preset", async () => {
+  it("uses multiSelect installer settings when subtitles capability is selected", async () => {
     const base = mkdtempSync(path.join(tmpdir(), "create-streamfox-plugin-"));
     const target = path.join(base, "demo-subtitles");
 
@@ -69,7 +69,7 @@ describe("scaffoldProject", () => {
       targetDir: target,
       projectName: "demo-subtitles",
       language: "ts",
-      preset: "subtitles",
+      capabilities: ["meta", "subtitles"],
       advanced: true,
       sdkVersion: "^0.2.0",
     });

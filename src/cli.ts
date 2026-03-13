@@ -90,7 +90,12 @@ program
         directory: directoryArg ?? "my-media-plugin",
         language: options.ts ? "ts" : options.js ? "js" : "ts",
         preset: options.preset ?? DEFAULT_PRESET,
-        extraCapabilities: options.capabilities ?? [],
+        capabilities: Array.from(
+          new Set([
+            options.preset ?? DEFAULT_PRESET,
+            ...(options.capabilities ?? []),
+          ]),
+        ) as Capability[],
         advanced: options.advanced ?? false,
         sdkVersion: options.sdkVersion ?? DEFAULT_SDK_VERSION,
       };
@@ -100,7 +105,7 @@ program
       let directory = promptDefaults.directory;
       let language = promptDefaults.language as Language;
       let preset = promptDefaults.preset;
-      let extraCapabilities = promptDefaults.extraCapabilities;
+      let capabilities = promptDefaults.capabilities;
       let advanced = promptDefaults.advanced;
       let sdkVersion = promptDefaults.sdkVersion;
 
@@ -124,25 +129,16 @@ program
               initial: language === "ts" ? 0 : 1,
             },
             {
-              type: "select",
-              name: "preset",
-              message: "Plugin preset",
-              choices: CAPABILITIES.map((capability) => ({
-                title: capability,
-                value: capability,
-              })),
-              initial: CAPABILITIES.indexOf(preset),
-            },
-            {
               type: "multiselect",
-              name: "extraCapabilities",
-              message: "Extra capabilities (optional)",
+              name: "capabilities",
+              message: "Plugin capabilities",
               choices: CAPABILITIES.map((capability) => ({
                 title: capability,
                 value: capability,
+                selected: capabilities.includes(capability),
               })),
               instructions: false,
-              min: 0,
+              min: 1,
               hint: "Space to select",
             },
             {
@@ -167,8 +163,10 @@ program
 
         directory = answers.directory;
         language = answers.language;
-        preset = (answers.preset ?? promptDefaults.preset) as Preset;
-        extraCapabilities = (answers.extraCapabilities ?? []) as Capability[];
+        capabilities = (answers.capabilities ??
+          promptDefaults.capabilities) as Capability[];
+        preset =
+          capabilities[0] ?? promptDefaults.preset;
         advanced = Boolean(answers.advanced ?? promptDefaults.advanced);
         sdkVersion = answers.sdkVersion ?? promptDefaults.sdkVersion;
       }
@@ -180,8 +178,8 @@ program
         targetDir,
         projectName,
         language,
+        capabilities,
         preset,
-        extraCapabilities,
         advanced,
         sdkVersion,
       });
