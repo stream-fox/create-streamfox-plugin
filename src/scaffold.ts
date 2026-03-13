@@ -12,7 +12,7 @@ export type Capability = (typeof CAPABILITIES)[number];
 export type Preset = Capability;
 export type Language = "ts" | "js";
 export const DEFAULT_PRESET: Preset = "meta";
-export const DEFAULT_SDK_VERSION = "^0.3.0";
+export const DEFAULT_SDK_VERSION = "^0.4.0";
 
 export interface ScaffoldOptions {
   targetDir: string;
@@ -123,15 +123,37 @@ ${
     : ""
 }        ],
       },
+      sortSets: {
+        browseSorts: [
+          sorts.desc("popularity", {
+            label: "Popular",
+            aliases: ["popular"],
+          }),
+${
+  advanced
+    ? `          sorts.desc("year", {
+            label: "Latest",
+            aliases: ["latest"],
+          }),
+          sorts.choice("rating", {
+            label: "Top Rated",
+            aliases: ["top-rated"],
+            directions: ["descending", "ascending"],
+            defaultDirection: "descending",
+          }),
+`
+    : ""
+}        ],
+      },
       endpoints: [
         {
-          id: "discover",
-          name: "Discover",
+          id: "browse",
+          name: "Browse",
           mediaTypes: ["movie"],
           filterSetRefs: ["commonCatalogFilters"],
+          sortSetRefs: ["browseSorts"],
           filters: [filters.range("year")],
           paging: { defaultPageSize: 20, maxPageSize: 50 },
-          sorts: [{ key: "popularity", directions: ["descending"] }],
         },
       ],
       handler: async () => ({
@@ -293,6 +315,7 @@ function makePluginFile(
   const importSpec = [
     "definePlugin",
     capabilities.includes("catalog") ? "filters" : undefined,
+    capabilities.includes("catalog") ? "sorts" : undefined,
     install.length > 0 ? "settings" : undefined,
   ]
     .filter((value): value is string => Boolean(value))
@@ -441,9 +464,11 @@ ${capabilitiesList}
 
 - Prefer semantic catalog IDs such as \`discover\`, \`popular\`, and \`search\`
 - Keep variable filters in the query string, for example:
-  - \`GET /catalog/movie/discover?language=ja\`
-  - \`GET /catalog/movie/discover?year=2024\`
-- Use shared \`filterSets\` and \`filters.*\` helpers when defining catalog filters
+  - \`GET /catalog/movie/browse?language=ja\`
+  - \`GET /catalog/movie/browse?year=2024\`
+  - \`GET /catalog/movie/browse?query=matrix\`
+  - \`GET /catalog/movie/browse?orderBy=popular\`
+- Use shared \`filterSets\`, \`sortSets\`, \`filters.*\`, and \`sorts.*\` helpers when defining catalog controls
 - Query values normalize to canonical option values when aliases are declared
 
 ## Endpoints
@@ -485,22 +510,14 @@ export async function scaffoldProject(options: ScaffoldOptions): Promise<void> {
     await writeFile(path.join(options.targetDir, "tsconfig.json"), tsConfig);
     await writeFile(
       path.join(srcDir, "plugin.ts"),
-      makePluginFile(
-        options.projectName,
-        capabilities,
-        advanced,
-      ),
+      makePluginFile(options.projectName, capabilities, advanced),
     );
     await writeFile(path.join(srcDir, "server.ts"), makeServerFile("ts"));
     await writeFile(path.join(testDir, "plugin.test.ts"), makeVitestFile("ts"));
   } else {
     await writeFile(
       path.join(srcDir, "plugin.js"),
-      makePluginFile(
-        options.projectName,
-        capabilities,
-        advanced,
-      ),
+      makePluginFile(options.projectName, capabilities, advanced),
     );
     await writeFile(path.join(srcDir, "server.js"), makeServerFile("js"));
     await writeFile(path.join(testDir, "plugin.test.js"), makeVitestFile("js"));

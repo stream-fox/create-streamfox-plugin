@@ -46,7 +46,11 @@ const program = new Command();
 
 program
   .name("create-streamfox-plugin")
-  .version(packageJSON.version, "-v, --version", "display the current CLI version")
+  .version(
+    packageJSON.version,
+    "-v, --version",
+    "display the current CLI version",
+  )
   .description("Scaffold StreamFox plugin projects with modern JS/TS presets")
   .showHelpAfterError()
   .argument("[directory]", "output directory")
@@ -165,8 +169,7 @@ program
         language = answers.language;
         capabilities = (answers.capabilities ??
           promptDefaults.capabilities) as Capability[];
-        preset =
-          capabilities[0] ?? promptDefaults.preset;
+        preset = capabilities[0] ?? promptDefaults.preset;
         advanced = Boolean(answers.advanced ?? promptDefaults.advanced);
         sdkVersion = answers.sdkVersion ?? promptDefaults.sdkVersion;
       }
