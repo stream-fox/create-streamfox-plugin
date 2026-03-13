@@ -12,7 +12,7 @@ export type Capability = (typeof CAPABILITIES)[number];
 export type Preset = Capability;
 export type Language = "ts" | "js";
 export const DEFAULT_PRESET: Preset = "meta";
-export const DEFAULT_SDK_VERSION = "^0.6.0";
+export const DEFAULT_SDK_VERSION = "^0.6.1";
 
 export interface ScaffoldOptions {
   targetDir: string;
@@ -154,6 +154,18 @@ ${
           sortSetRefs: ["browseSorts"],
           filters: [filters.intOrRange("year")],
           paging: { defaultPageSize: 20, maxPageSize: 50 },
+        },
+        {
+          id: "episodes",
+          name: "Episodes",
+          mediaTypes: ["series"],
+          filters: [
+            filters.number("season", {
+              label: "Season",
+              group: "episodes",
+            }),
+          ],
+          paging: { defaultPageSize: 50, maxPageSize: 200 },
         },
       ],
       handler: async () => ({
@@ -546,6 +558,8 @@ ${capabilitiesList}
   - \`GET /catalog/movie/browse?year=2000..2024\`
   - \`GET /catalog/movie/browse?query=matrix\`
   - \`GET /catalog/movie/browse?orderBy=popular\`
+  - \`GET /catalog/series/episodes?season=1\`
+  - \`GET /catalog/series/episodes\` to return all episodes when no season is provided
 - Use shared \`filterSets\`, \`sortSets\`, \`filters.*\`, and \`sorts.*\` helpers when defining catalog controls
 - Query values normalize to canonical option values when aliases are declared
 

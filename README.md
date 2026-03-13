@@ -64,7 +64,7 @@ create-streamfox-plugin my-plugin --yes
 | `--preset <preset>`      | enum          | `meta`                 | Legacy/compat primary template hint. Interactive mode now asks for capabilities directly.  |
 | `--capabilities <a,b,c>` | csv enum list | `meta`                 | Selected capabilities. One of: `catalog`, `meta`, `stream`, `subtitles`, `plugin_catalog`. |
 | `--advanced`             | flag          | `false`                | Generate richer examples (torrent/usenet/archive/trailers/distribution).                   |
-| `--sdk-version <range>`  | string        | `^0.6.0`               | Dependency range for `@streamfox/plugin-sdk`.                                              |
+| `--sdk-version <range>`  | string        | `^0.6.1`               | Dependency range for `@streamfox/plugin-sdk`.                                              |
 | `--yes`                  | flag          | `false`                | Skip prompts and use provided/default values.                                              |
 | `-v, --version`          | flag          | no                     | Display the current CLI version.                                                           |
 
@@ -77,7 +77,7 @@ create-streamfox-plugin streamfox-opensubs \
   --ts \
   --capabilities subtitles,meta,stream \
   --advanced \
-  --sdk-version ^0.6.0 \
+  --sdk-version ^0.6.1 \
   --yes
 ```
 
