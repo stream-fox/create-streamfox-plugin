@@ -22,12 +22,16 @@ describe("scaffoldProject", () => {
     expect(existsSync(path.join(target, "package.json"))).toBe(true);
     expect(existsSync(path.join(target, "src", "plugin.ts"))).toBe(true);
     expect(existsSync(path.join(target, "src", "server.ts"))).toBe(true);
+    expect(existsSync(path.join(target, ".gitignore"))).toBe(true);
 
     const packageJson = await readFile(
       path.join(target, "package.json"),
       "utf8",
     );
     expect(packageJson).toContain('"@streamfox/plugin-sdk": "^0.2.0"');
+    expect(packageJson).not.toContain("prettier");
+    expect(packageJson).not.toContain('"format"');
+    expect(packageJson).not.toContain('"format:check"');
 
     const pluginFile = await readFile(
       path.join(target, "src", "plugin.ts"),
@@ -59,6 +63,8 @@ describe("scaffoldProject", () => {
     expect(readme).toContain("Capabilities: `meta, subtitles`");
     expect(readme).toContain("supportedTransports");
     expect(readme).toContain("Advanced template: `enabled`");
+    expect(readme).toContain("npm run check");
+    expect(readme).not.toContain("npm run format");
   });
 
   it("uses multiSelect installer settings when subtitles capability is selected", async () => {
