@@ -63,12 +63,13 @@ create-streamfox-plugin streamfox-opensubs \
   - install deeplink URL
   - launch URL
 - `test/plugin.test.(ts|js)` smoke test (`/manifest`, `/studio-config`)
-- `README.md`, `package.json`, and (for TS) `tsconfig.json`
+- `README.md`, `package.json`, `.prettierrc.json`, `.prettierignore`, and (for TS) `tsconfig.json`
 
 ## Development
 
 ```bash
 npm install
+npm run format
 npm run build
 npm test
 ```

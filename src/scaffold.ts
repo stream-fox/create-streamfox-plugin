@@ -41,22 +41,35 @@ function makePackageJson(name: string, language: Language, sdkVersion: string): 
       ? {
           dev: "tsx watch src/server.ts",
           build: "tsc -p tsconfig.json",
+          format: "prettier --write .",
+          "format:check": "prettier --check .",
           start: "node dist/server.js",
           test: "vitest run",
+          typecheck: "tsc --noEmit",
         }
       : {
           dev: "node --watch src/server.js",
           build: "echo \"No build step for JavaScript template\"",
+          format: "prettier --write .",
+          "format:check": "prettier --check .",
           start: "node src/server.js",
           test: "vitest run",
         };
+
+  const normalizedScripts = {
+    ...scripts,
+    check:
+      language === "ts"
+        ? "npm run format:check && npm run typecheck && npm test && npm run build"
+        : "npm run format:check && npm test && npm run build",
+  };
 
   const packageJson = {
     name,
     version: "0.1.0",
     private: true,
     type: "module",
-    scripts,
+    scripts: normalizedScripts,
     dependencies: {
       "@streamfox/plugin-sdk": sdkVersion,
     },
@@ -64,11 +77,13 @@ function makePackageJson(name: string, language: Language, sdkVersion: string): 
       language === "ts"
         ? {
             "@types/node": "^24.6.0",
+            prettier: "^3.6.2",
             tsx: "^4.20.5",
             typescript: "^5.9.2",
             vitest: "^2.1.9",
           }
         : {
+            prettier: "^3.6.2",
             vitest: "^2.1.9",
           },
   };
@@ -304,6 +319,18 @@ const tsConfig = `{
 }
 `;
 
+const prettierConfig = `{
+  "semi": true,
+  "singleQuote": false,
+  "trailingComma": "all"
+}
+`;
+
+const prettierIgnore = `dist
+node_modules
+.DS_Store
+`;
+
 function makeReadme(projectName: string, preset: Preset, capabilities: Capability[], advanced: boolean): string {
   const capabilitiesList = capabilities.map((capability) => `- ${capability}`).join("\n");
 
@@ -341,6 +368,7 @@ Advanced template: \`${advanced ? "enabled" : "disabled"}\`
 
 - npm run dev
 - npm run build
+- npm run format
 - npm run start
 - npm run test
 
@@ -374,6 +402,8 @@ export async function scaffoldProject(options: ScaffoldOptions): Promise<void> {
   await mkdir(testDir, { recursive: true });
 
   await writeFile(path.join(options.targetDir, "package.json"), makePackageJson(options.projectName, options.language, sdkVersion));
+  await writeFile(path.join(options.targetDir, ".prettierrc.json"), prettierConfig);
+  await writeFile(path.join(options.targetDir, ".prettierignore"), prettierIgnore);
   await writeFile(path.join(options.targetDir, "README.md"), makeReadme(options.projectName, options.preset, capabilities, advanced));
 
   if (options.language === "ts") {
