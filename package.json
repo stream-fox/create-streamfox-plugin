@@ -1,6 +1,6 @@
 {
   "name": "@streamfox/create-streamfox-plugin",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Standalone CLI to scaffold StreamFox plugin projects",
   "type": "module",
   "bin": {

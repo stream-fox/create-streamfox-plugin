@@ -16,7 +16,7 @@ describe("scaffoldProject", () => {
       language: "ts",
       capabilities: ["subtitles", "meta"],
       advanced: true,
-      sdkVersion: "^0.2.0",
+      sdkVersion: "^0.2.1",
     });
 
     expect(existsSync(path.join(target, "package.json"))).toBe(true);
@@ -28,7 +28,7 @@ describe("scaffoldProject", () => {
       path.join(target, "package.json"),
       "utf8",
     );
-    expect(packageJson).toContain('"@streamfox/plugin-sdk": "^0.2.0"');
+    expect(packageJson).toContain('"@streamfox/plugin-sdk": "^0.2.1"');
     expect(packageJson).not.toContain("prettier");
     expect(packageJson).not.toContain('"format"');
     expect(packageJson).not.toContain('"format:check"');
@@ -77,7 +77,7 @@ describe("scaffoldProject", () => {
       language: "ts",
       capabilities: ["meta", "subtitles"],
       advanced: true,
-      sdkVersion: "^0.2.0",
+      sdkVersion: "^0.2.1",
     });
 
     const pluginFile = await readFile(
@@ -85,7 +85,8 @@ describe("scaffoldProject", () => {
       "utf8",
     );
     expect(pluginFile).toContain('settings.multiSelect("languages"');
-    expect(pluginFile).toContain("Array.isArray(settings.languages)");
+    expect(pluginFile).toContain("Array.isArray(settings?.languages)");
+    expect(pluginFile).toContain("void settings?.includeHI");
     expect(pluginFile).toContain("configurationRequired: true");
   });
 });

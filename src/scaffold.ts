@@ -12,7 +12,7 @@ export type Capability = (typeof CAPABILITIES)[number];
 export type Preset = Capability;
 export type Language = "ts" | "js";
 export const DEFAULT_PRESET: Preset = "meta";
-export const DEFAULT_SDK_VERSION = "^0.2.0";
+export const DEFAULT_SDK_VERSION = "^0.2.1";
 
 export interface ScaffoldOptions {
   targetDir: string;
@@ -180,14 +180,14 @@ ${
       mediaTypes: ["movie", "episode"],
       defaultLanguages: ["en"],
       handler: async (request, { settings }) => {
-        const configuredLanguages = Array.isArray(settings.languages)
+        const configuredLanguages = Array.isArray(settings?.languages)
           ? settings.languages
           : [];
         const languagePreferences =
           configuredLanguages.length > 0 ? configuredLanguages : (request.languagePreferences ?? []);
 
         void languagePreferences;
-        void settings.includeHI;
+        void settings?.includeHI;
 
         return {
           subtitles: [],
