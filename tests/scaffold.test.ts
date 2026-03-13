@@ -16,7 +16,7 @@ describe("scaffoldProject", () => {
       language: "ts",
       capabilities: ["subtitles", "meta"],
       advanced: true,
-      sdkVersion: "^0.6.0",
+      sdkVersion: "^0.6.1",
     });
 
     expect(existsSync(path.join(target, "package.json"))).toBe(true);
@@ -28,7 +28,7 @@ describe("scaffoldProject", () => {
       path.join(target, "package.json"),
       "utf8",
     );
-    expect(packageJson).toContain('"@streamfox/plugin-sdk": "^0.6.0"');
+    expect(packageJson).toContain('"@streamfox/plugin-sdk": "^0.6.1"');
     expect(packageJson).not.toContain("prettier");
     expect(packageJson).not.toContain('"format"');
     expect(packageJson).not.toContain('"format:check"');
@@ -101,7 +101,7 @@ describe("scaffoldProject", () => {
       language: "ts",
       capabilities: ["meta", "subtitles"],
       advanced: true,
-      sdkVersion: "^0.6.0",
+      sdkVersion: "^0.6.1",
     });
 
     const pluginFile = await readFile(
@@ -124,7 +124,7 @@ describe("scaffoldProject", () => {
       language: "ts",
       capabilities: ["catalog"],
       advanced: true,
-      sdkVersion: "^0.6.0",
+      sdkVersion: "^0.6.1",
     });
 
     const pluginFile = await readFile(
@@ -138,8 +138,10 @@ describe("scaffoldProject", () => {
     expect(pluginFile).toContain("sortSets:");
     expect(pluginFile).toContain("commonCatalogFilters");
     expect(pluginFile).toContain('id: "browse"');
+    expect(pluginFile).toContain('id: "episodes"');
     expect(pluginFile).toContain('filters.select("language"');
     expect(pluginFile).toContain('filters.intOrRange("year")');
+    expect(pluginFile).toContain('filters.number("season"');
     expect(pluginFile).toContain('sorts.desc("popularity"');
     expect(pluginFile).toContain('sortSetRefs: ["browseSorts"]');
 
@@ -148,6 +150,10 @@ describe("scaffoldProject", () => {
     expect(readme).toContain("GET /catalog/movie/browse?year=2024");
     expect(readme).toContain("GET /catalog/movie/browse?year=2000..2024");
     expect(readme).toContain("GET /catalog/movie/browse?orderBy=popular");
+    expect(readme).toContain("GET /catalog/series/episodes?season=1");
+    expect(readme).toContain(
+      "GET /catalog/series/episodes` to return all episodes when no season is provided",
+    );
     expect(readme).toContain("filterSets");
     expect(readme).toContain("filters.*");
     expect(readme).toContain("sortSets");
