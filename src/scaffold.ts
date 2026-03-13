@@ -12,7 +12,7 @@ export type Capability = (typeof CAPABILITIES)[number];
 export type Preset = Capability;
 export type Language = "ts" | "js";
 export const DEFAULT_PRESET: Preset = "meta";
-export const DEFAULT_SDK_VERSION = "^0.2.1";
+export const DEFAULT_SDK_VERSION = "^0.3.0";
 
 export interface ScaffoldOptions {
   targetDir: string;
@@ -100,12 +100,38 @@ function resourceBlock(capability: Capability, advanced: boolean): string {
   switch (capability) {
     case "catalog":
       return `catalog: {
+      filterSets: {
+        commonCatalogFilters: [
+          filters.select("genre", {
+            label: "Genre",
+            options: [
+              { label: "Action", value: "action", aliases: ["Action"] },
+              { label: "Drama", value: "drama" },
+            ],
+          }),
+${
+  advanced
+    ? `          filters.select("language", {
+            label: "Language",
+            group: "regional",
+            options: [
+              { label: "Japanese", value: "ja", aliases: ["Japanese (ja)"] },
+              { label: "English", value: "en", aliases: ["English (en)"] },
+            ],
+          }),
+`
+    : ""
+}        ],
+      },
       endpoints: [
         {
-          id: "top",
-          name: "Top",
+          id: "discover",
+          name: "Discover",
           mediaTypes: ["movie"],
-          filters: [{ key: "genre", valueType: "string" }],
+          filterSetRefs: ["commonCatalogFilters"],
+          filters: [filters.range("year")],
+          paging: { defaultPageSize: 20, maxPageSize: 50 },
+          sorts: [{ key: "popularity", directions: ["descending"] }],
         },
       ],
       handler: async () => ({
@@ -264,8 +290,13 @@ function makePluginFile(
     .map((capability) => resourceBlock(capability, advanced))
     .join("\n    ");
   const install = makeInstallBlock(capabilities);
-  const importSpec =
-    install.length > 0 ? "definePlugin, settings" : "definePlugin";
+  const importSpec = [
+    "definePlugin",
+    capabilities.includes("catalog") ? "filters" : undefined,
+    install.length > 0 ? "settings" : undefined,
+  ]
+    .filter((value): value is string => Boolean(value))
+    .join(", ");
   const installBlock = install.length > 0 ? `${install}` : "";
 
   return `import { ${importSpec} } from "@streamfox/plugin-sdk";
@@ -405,6 +436,15 @@ ${capabilitiesList}
 - Unified transport model via \`stream.transport\`
 - Capability declaration via \`resources.stream.supportedTransports\`
 - Optional selection controls via \`stream.selection\`
+
+## Catalog Filters
+
+- Prefer semantic catalog IDs such as \`discover\`, \`popular\`, and \`search\`
+- Keep variable filters in the query string, for example:
+  - \`GET /catalog/movie/discover?language=ja\`
+  - \`GET /catalog/movie/discover?year=2024\`
+- Use shared \`filterSets\` and \`filters.*\` helpers when defining catalog filters
+- Query values normalize to canonical option values when aliases are declared
 
 ## Endpoints
 

@@ -5,6 +5,7 @@ CLI scaffolder for StreamFox plugin projects.
 Generated projects target the current `@streamfox/plugin-sdk` contract:
 
 - unified stream transport model (`supportedTransports` + `stream.transport`)
+- richer catalog filters with shared `filterSets` and `filters.*` helpers
 - optional installer config with `configurationRequired`
 - serve integration URLs (`url`, `installURL`, `launchURL`)
 
@@ -50,7 +51,7 @@ create-streamfox-plugin my-plugin --yes
 | `--preset <preset>`      | enum          | `meta`                 | Legacy/compat primary template hint. Interactive mode now asks for capabilities directly. |
 | `--capabilities <a,b,c>` | csv enum list | `meta`                 | Selected capabilities. One of: `catalog`, `meta`, `stream`, `subtitles`, `plugin_catalog`. |
 | `--advanced`             | flag          | `false`                | Generate richer examples (torrent/usenet/archive/trailers/distribution). |
-| `--sdk-version <range>`  | string        | `^0.2.1`               | Dependency range for `@streamfox/plugin-sdk`.                            |
+| `--sdk-version <range>`  | string        | `^0.3.0`               | Dependency range for `@streamfox/plugin-sdk`.                            |
 | `--yes`                  | flag          | `false`                | Skip prompts and use provided/default values.                            |
 | `-v, --version`          | flag          | no                     | Display the current CLI version.                                         |
 
@@ -63,13 +64,15 @@ create-streamfox-plugin streamfox-opensubs \
   --ts \
   --capabilities subtitles,meta,stream \
   --advanced \
-  --sdk-version ^0.2.1 \
+  --sdk-version ^0.3.0 \
   --yes
 ```
 
 ## What Gets Generated
 
 - `src/plugin.(ts|js)` with selected capabilities and handlers
+  - catalog examples use semantic endpoint IDs such as `discover`
+  - catalog examples demonstrate shared `filterSets` and `filters.*` helpers
 - `src/server.(ts|js)` that calls `serve(...)` and prints:
   - manifest URL
   - install deeplink URL
