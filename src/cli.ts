@@ -19,7 +19,9 @@ function parsePreset(input: string): Preset {
   if (CAPABILITIES.includes(input as Capability)) {
     return input as Preset;
   }
-  throw new InvalidArgumentError(`Invalid preset '${input}'. Use one of: ${capabilitiesLabel()}`);
+  throw new InvalidArgumentError(
+    `Invalid preset '${input}'. Use one of: ${capabilitiesLabel()}`,
+  );
 }
 
 function parseCapabilitiesList(input: string): Capability[] {
@@ -30,7 +32,9 @@ function parseCapabilitiesList(input: string): Capability[] {
 
   for (const capability of parsed) {
     if (!CAPABILITIES.includes(capability)) {
-      throw new InvalidArgumentError(`Invalid capability '${capability}'. Use one of: ${capabilitiesLabel()}`);
+      throw new InvalidArgumentError(
+        `Invalid capability '${capability}'. Use one of: ${capabilitiesLabel()}`,
+      );
     }
   }
 
@@ -46,10 +50,22 @@ program
   .argument("[directory]", "output directory")
   .option("--ts", "use TypeScript template")
   .option("--js", "use JavaScript template")
-  .option("--preset <preset>", `plugin preset: ${capabilitiesLabel()}`, parsePreset)
-  .option("--capabilities <capabilities>", "extra capabilities as comma-separated list", parseCapabilitiesList)
+  .option(
+    "--preset <preset>",
+    `plugin preset: ${capabilitiesLabel()}`,
+    parsePreset,
+  )
+  .option(
+    "--capabilities <capabilities>",
+    "extra capabilities as comma-separated list",
+    parseCapabilitiesList,
+  )
   .option("--advanced", "generate advanced capability examples")
-  .option("--sdk-version <range>", "@streamfox/plugin-sdk version/range", DEFAULT_SDK_VERSION)
+  .option(
+    "--sdk-version <range>",
+    "@streamfox/plugin-sdk version/range",
+    DEFAULT_SDK_VERSION,
+  )
   .option("--yes", "skip prompts and use defaults")
   .action(
     async (
@@ -109,14 +125,20 @@ program
               type: "select",
               name: "preset",
               message: "Plugin preset",
-              choices: CAPABILITIES.map((capability) => ({ title: capability, value: capability })),
+              choices: CAPABILITIES.map((capability) => ({
+                title: capability,
+                value: capability,
+              })),
               initial: CAPABILITIES.indexOf(preset),
             },
             {
               type: "multiselect",
               name: "extraCapabilities",
               message: "Extra capabilities (optional)",
-              choices: CAPABILITIES.map((capability) => ({ title: capability, value: capability })),
+              choices: CAPABILITIES.map((capability) => ({
+                title: capability,
+                value: capability,
+              })),
               instructions: false,
               min: 0,
               hint: "Space to select",

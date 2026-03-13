@@ -1,7 +1,13 @@
 import { access, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-export const CAPABILITIES = ["catalog", "meta", "stream", "subtitles", "plugin_catalog"] as const;
+export const CAPABILITIES = [
+  "catalog",
+  "meta",
+  "stream",
+  "subtitles",
+  "plugin_catalog",
+] as const;
 export type Capability = (typeof CAPABILITIES)[number];
 export type Preset = Capability;
 export type Language = "ts" | "js";
@@ -35,7 +41,11 @@ async function ensureTargetDoesNotExist(targetDir: string): Promise<void> {
   }
 }
 
-function makePackageJson(name: string, language: Language, sdkVersion: string): string {
+function makePackageJson(
+  name: string,
+  language: Language,
+  sdkVersion: string,
+): string {
   const scripts =
     language === "ts"
       ? {
@@ -49,7 +59,7 @@ function makePackageJson(name: string, language: Language, sdkVersion: string): 
         }
       : {
           dev: "node --watch src/server.js",
-          build: "echo \"No build step for JavaScript template\"",
+          build: 'echo "No build step for JavaScript template"',
           format: "prettier --write .",
           "format:check": "prettier --check .",
           start: "node src/server.js",
@@ -112,7 +122,9 @@ function resourceBlock(capability: Capability, advanced: boolean): string {
       mediaTypes: ["movie"],
       includes: ["videos", "links"],
       handler: async () => ({
-        item: ${advanced ? `{
+        item: ${
+          advanced
+            ? `{
           summary: {
             id: { namespace: "imdb", value: "tt1254207" },
             mediaType: "movie",
@@ -128,7 +140,9 @@ function resourceBlock(capability: Capability, advanced: boolean): string {
               streams: [{ transport: { kind: "http", url: "https://example.com/video.mp4" } }],
             },
           ],
-        }` : "null"},
+        }`
+            : "null"
+        },
       }),
     },`;
     case "stream":
@@ -144,7 +158,9 @@ function resourceBlock(capability: Capability, advanced: boolean): string {
               proxyHeaders: { request: { "User-Agent": "StreamFox" } },
             },
           },
-${advanced ? `          {
+${
+  advanced
+    ? `          {
             transport: { kind: "torrent", infoHash: "abcdef", peerDiscovery: ["tracker:udp://tracker.example.com:80"] },
             selection: { fileIndex: 0 },
           },
@@ -159,7 +175,9 @@ ${advanced ? `          {
             },
             selection: { fileMustInclude: "movie.mkv" },
           },
-` : ""}        ],
+`
+    : ""
+}        ],
       }),
     },`;
     case "subtitles":
@@ -242,10 +260,18 @@ function makeInstallBlock(preset: Preset): string {
 `;
 }
 
-function makePluginFile(name: string, preset: Preset, capabilities: Capability[], advanced: boolean): string {
-  const resources = capabilities.map((capability) => resourceBlock(capability, advanced)).join("\n    ");
+function makePluginFile(
+  name: string,
+  preset: Preset,
+  capabilities: Capability[],
+  advanced: boolean,
+): string {
+  const resources = capabilities
+    .map((capability) => resourceBlock(capability, advanced))
+    .join("\n    ");
   const install = makeInstallBlock(preset);
-  const importSpec = install.length > 0 ? "definePlugin, settings" : "definePlugin";
+  const importSpec =
+    install.length > 0 ? "definePlugin, settings" : "definePlugin";
   const installBlock = install.length > 0 ? `${install}` : "";
 
   return `import { ${importSpec} } from "@streamfox/plugin-sdk";
@@ -331,8 +357,15 @@ node_modules
 .DS_Store
 `;
 
-function makeReadme(projectName: string, preset: Preset, capabilities: Capability[], advanced: boolean): string {
-  const capabilitiesList = capabilities.map((capability) => `- ${capability}`).join("\n");
+function makeReadme(
+  projectName: string,
+  preset: Preset,
+  capabilities: Capability[],
+  advanced: boolean,
+): string {
+  const capabilitiesList = capabilities
+    .map((capability) => `- ${capability}`)
+    .join("\n");
 
   const endpointForCapability = (capability: Capability): string => {
     switch (capability) {
@@ -354,7 +387,9 @@ function makeReadme(projectName: string, preset: Preset, capabilities: Capabilit
   const endpointLines = [
     "- GET /manifest",
     "- GET /studio-config",
-    ...capabilities.map((capability) => `- GET ${endpointForCapability(capability)}`),
+    ...capabilities.map(
+      (capability) => `- GET ${endpointForCapability(capability)}`,
+    ),
   ].join("\n");
 
   return `# ${projectName}
@@ -389,8 +424,12 @@ ${endpointLines}
 }
 
 export async function scaffoldProject(options: ScaffoldOptions): Promise<void> {
-  const capabilities = sortedCapabilities([options.preset, ...(options.extraCapabilities ?? [])]);
-  const sdkVersion = (options.sdkVersion ?? DEFAULT_SDK_VERSION).trim() || DEFAULT_SDK_VERSION;
+  const capabilities = sortedCapabilities([
+    options.preset,
+    ...(options.extraCapabilities ?? []),
+  ]);
+  const sdkVersion =
+    (options.sdkVersion ?? DEFAULT_SDK_VERSION).trim() || DEFAULT_SDK_VERSION;
   const advanced = options.advanced ?? false;
 
   await ensureTargetDoesNotExist(options.targetDir);
@@ -401,18 +440,46 @@ export async function scaffoldProject(options: ScaffoldOptions): Promise<void> {
   await mkdir(srcDir, { recursive: true });
   await mkdir(testDir, { recursive: true });
 
-  await writeFile(path.join(options.targetDir, "package.json"), makePackageJson(options.projectName, options.language, sdkVersion));
-  await writeFile(path.join(options.targetDir, ".prettierrc.json"), prettierConfig);
-  await writeFile(path.join(options.targetDir, ".prettierignore"), prettierIgnore);
-  await writeFile(path.join(options.targetDir, "README.md"), makeReadme(options.projectName, options.preset, capabilities, advanced));
+  await writeFile(
+    path.join(options.targetDir, "package.json"),
+    makePackageJson(options.projectName, options.language, sdkVersion),
+  );
+  await writeFile(
+    path.join(options.targetDir, ".prettierrc.json"),
+    prettierConfig,
+  );
+  await writeFile(
+    path.join(options.targetDir, ".prettierignore"),
+    prettierIgnore,
+  );
+  await writeFile(
+    path.join(options.targetDir, "README.md"),
+    makeReadme(options.projectName, options.preset, capabilities, advanced),
+  );
 
   if (options.language === "ts") {
     await writeFile(path.join(options.targetDir, "tsconfig.json"), tsConfig);
-    await writeFile(path.join(srcDir, "plugin.ts"), makePluginFile(options.projectName, options.preset, capabilities, advanced));
+    await writeFile(
+      path.join(srcDir, "plugin.ts"),
+      makePluginFile(
+        options.projectName,
+        options.preset,
+        capabilities,
+        advanced,
+      ),
+    );
     await writeFile(path.join(srcDir, "server.ts"), makeServerFile("ts"));
     await writeFile(path.join(testDir, "plugin.test.ts"), makeVitestFile("ts"));
   } else {
-    await writeFile(path.join(srcDir, "plugin.js"), makePluginFile(options.projectName, options.preset, capabilities, advanced));
+    await writeFile(
+      path.join(srcDir, "plugin.js"),
+      makePluginFile(
+        options.projectName,
+        options.preset,
+        capabilities,
+        advanced,
+      ),
+    );
     await writeFile(path.join(srcDir, "server.js"), makeServerFile("js"));
     await writeFile(path.join(testDir, "plugin.test.js"), makeVitestFile("js"));
   }

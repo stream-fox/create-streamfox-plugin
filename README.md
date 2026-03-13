@@ -30,16 +30,16 @@ create-streamfox-plugin my-plugin --yes
 
 ## CLI Options
 
-| Option | Type | Default | Notes |
-| --- | --- | --- | --- |
-| `[directory]` | positional | `my-media-plugin` | Output directory. |
-| `--ts` | flag | `true` (unless `--js`) | Generate TypeScript template. |
-| `--js` | flag | no | Generate JavaScript template. |
-| `--preset <preset>` | enum | `meta` | One of: `catalog`, `meta`, `stream`, `subtitles`, `plugin_catalog`. |
-| `--capabilities <a,b,c>` | csv enum list | none | Adds extra capabilities on top of preset. |
-| `--advanced` | flag | `false` | Generate richer examples (torrent/usenet/archive/trailers/distribution). |
-| `--sdk-version <range>` | string | `^0.1.0` | Dependency range for `@streamfox/plugin-sdk`. |
-| `--yes` | flag | `false` | Skip prompts and use provided/default values. |
+| Option                   | Type          | Default                | Notes                                                                    |
+| ------------------------ | ------------- | ---------------------- | ------------------------------------------------------------------------ |
+| `[directory]`            | positional    | `my-media-plugin`      | Output directory.                                                        |
+| `--ts`                   | flag          | `true` (unless `--js`) | Generate TypeScript template.                                            |
+| `--js`                   | flag          | no                     | Generate JavaScript template.                                            |
+| `--preset <preset>`      | enum          | `meta`                 | One of: `catalog`, `meta`, `stream`, `subtitles`, `plugin_catalog`.      |
+| `--capabilities <a,b,c>` | csv enum list | none                   | Adds extra capabilities on top of preset.                                |
+| `--advanced`             | flag          | `false`                | Generate richer examples (torrent/usenet/archive/trailers/distribution). |
+| `--sdk-version <range>`  | string        | `^0.1.0`               | Dependency range for `@streamfox/plugin-sdk`.                            |
+| `--yes`                  | flag          | `false`                | Skip prompts and use provided/default values.                            |
 
 ## Examples
 
