@@ -9,19 +9,16 @@ export const CAPABILITIES = [
   "plugin_catalog",
 ] as const;
 export type Capability = (typeof CAPABILITIES)[number];
-export type Preset = Capability;
 export type Language = "ts" | "js";
-export const DEFAULT_PRESET: Preset = "meta";
+export const DEFAULT_CAPABILITIES: readonly Capability[] = ["meta"];
 export const DEFAULT_SDK_VERSION = "^0.7.0";
 
 export interface ScaffoldOptions {
   targetDir: string;
   projectName: string;
   language: Language;
-  preset?: Preset;
   capabilities?: Capability[];
   advanced?: boolean;
-  extraCapabilities?: Capability[];
   sdkVersion?: string;
 }
 
@@ -103,6 +100,19 @@ function makePackageJson(
 function resourceBlock(capability: Capability, advanced: boolean): string {
   switch (capability) {
     case "catalog":
+      if (!advanced) {
+        return `catalog: {
+      endpoints: [
+        {
+          id: ids.catalog("browse"),
+          mediaType: "movie",
+        },
+      ],
+      handler: async () => ({
+        items: [],
+      }),
+    },`;
+      }
       return `catalog: {
       filterSets: {
         commonCatalogFilters: [
@@ -197,9 +207,16 @@ ${
       }),
     },`;
     case "meta":
+      if (!advanced) {
+        return `meta: {
+      mediaType: "movie",
+      handler: async () => ({
+        item: null,
+      }),
+    },`;
+      }
       return `meta: {
       mediaTypes: ["movie"],
-      idPrefixes: ["tt"],
       embeddedVideoStreamStrategy: "merge",
       includes: [
         "videos",
@@ -292,9 +309,20 @@ ${
       }),
     },`;
     case "stream":
+      if (!advanced) {
+        return `stream: {
+      mediaType: "movie",
+      handler: async () => ({
+        streams: [
+          {
+            transport: { kind: "http", url: "https://example.com/video.mp4", mode: "stream" },
+          },
+        ],
+      }),
+    },`;
+      }
       return `stream: {
       mediaTypes: ["movie"],
-      idPrefixes: ["tt"],
       supportedTransports: ${advanced ? `["http", "torrent", "usenet", "archive", "youtube"]` : `["http"]`},
       filters: [
         filters.select("quality", {
@@ -370,9 +398,15 @@ ${
       },
     },`;
     case "subtitles":
+      if (!advanced) {
+        return `subtitles: {
+      handler: async () => ({
+        subtitles: [],
+      }),
+    },`;
+      }
       return `subtitles: {
       mediaTypes: ["movie", "episode"],
-      idPrefixes: ["tt"],
       defaultLanguages: ["en"],
       filters: [
         filters.select("source", {
@@ -411,6 +445,20 @@ ${
       },
     },`;
     case "plugin_catalog":
+      if (!advanced) {
+        return `pluginCatalog: {
+      endpoints: [
+        {
+          id: ids.catalog("featured"),
+          name: "Featured",
+          pluginKinds: ["catalog"],
+        },
+      ],
+      handler: async () => ({
+        plugins: [],
+      }),
+    },`;
+      }
       return `pluginCatalog: {
       endpoints: [
         {
@@ -499,6 +547,7 @@ function makePluginFile(
   const configuration = makeConfigurationBlock(capabilities);
   const importSpec = [
     "definePlugin",
+    advanced &&
     capabilities.some(
       (capability) =>
         capability === "catalog" ||
@@ -507,23 +556,15 @@ function makePluginFile(
     )
       ? "filters"
       : undefined,
-    capabilities.includes("catalog") ? "sorts" : undefined,
+    advanced && capabilities.includes("catalog") ? "sorts" : undefined,
     "ids",
-    "settings",
+    advanced ? "settings" : undefined,
   ]
     .filter((value): value is string => Boolean(value))
     .join(", ");
 
-  return `import { ${importSpec} } from "@streamfox/plugin-sdk";
-
-export const plugin = definePlugin({
-  plugin: {
-    id: ids.plugin("com.example.${name}"),
-    name: "${name}",
-    version: "0.1.0",
-    description: "Generated StreamFox plugin scaffold",
-  },
-  safety: {
+  const advancedManifestBlocks = advanced
+    ? `  safety: {
     adult: false,
     p2p: ${capabilities.includes("stream") ? "true" : "false"},
   },
@@ -539,7 +580,19 @@ export const plugin = definePlugin({
     timeoutRatio: 0.02,
     freshnessTimestamp: "2026-03-15T00:00:00.000Z",
   },
-${configuration}  resources: {
+${configuration}`
+    : "";
+
+  return `import { ${importSpec} } from "@streamfox/plugin-sdk";
+
+export const plugin = definePlugin({
+  plugin: {
+    id: ids.plugin("com.example.${name}"),
+    name: "${name}",
+    version: "0.1.0",
+    description: "Generated StreamFox plugin scaffold",
+  },
+${advancedManifestBlocks}  resources: {
     ${resources}
   },
 });
@@ -643,6 +696,34 @@ function makeReadme(
     ),
   ].join("\n");
 
+  if (!advanced) {
+    return `# ${projectName}
+
+Generated with create-streamfox-plugin.
+
+Capabilities: \`${capabilities.join(", ")}\`
+Template mode: \`simple\`
+
+## Scripts
+
+- npm run dev
+- npm run build
+- npm run start
+- npm run test
+- npm run check
+
+## Notes
+
+- Uses progressive \`definePlugin\` shorthand where appropriate
+- IDs are IMDb-only: use \`ids.imdb("tt0133093")\` for media identifiers
+- Keep handlers minimal first, then enable richer fields as needed
+
+## Endpoints
+
+${endpointLines}
+`;
+  }
+
   return `# ${projectName}
 
 Generated with create-streamfox-plugin.
@@ -723,10 +804,7 @@ ${endpointLines}
 export async function scaffoldProject(options: ScaffoldOptions): Promise<void> {
   const capabilities = options.capabilities
     ? sortedCapabilities(options.capabilities)
-    : sortedCapabilities([
-        options.preset ?? DEFAULT_PRESET,
-        ...(options.extraCapabilities ?? []),
-      ]);
+    : sortedCapabilities([...DEFAULT_CAPABILITIES]);
   const sdkVersion =
     (options.sdkVersion ?? DEFAULT_SDK_VERSION).trim() || DEFAULT_SDK_VERSION;
   const advanced = options.advanced ?? false;

@@ -4,25 +4,15 @@ import prompts from "prompts";
 import packageJSON from "../package.json";
 import {
   CAPABILITIES,
-  DEFAULT_PRESET,
+  DEFAULT_CAPABILITIES,
   DEFAULT_SDK_VERSION,
   scaffoldProject,
   type Capability,
   type Language,
-  type Preset,
 } from "./scaffold";
 
 function capabilitiesLabel(): string {
   return CAPABILITIES.join(", ");
-}
-
-function parsePreset(input: string): Preset {
-  if (CAPABILITIES.includes(input as Capability)) {
-    return input as Preset;
-  }
-  throw new InvalidArgumentError(
-    `Invalid preset '${input}'. Use one of: ${capabilitiesLabel()}`,
-  );
 }
 
 function parseCapabilitiesList(input: string): Capability[] {
@@ -51,16 +41,11 @@ program
     "-v, --version",
     "display the current CLI version",
   )
-  .description("Scaffold StreamFox plugin projects with modern JS/TS presets")
+  .description("Scaffold StreamFox plugin projects with modern JS/TS templates")
   .showHelpAfterError()
   .argument("[directory]", "output directory")
   .option("--ts", "use TypeScript template")
   .option("--js", "use JavaScript template")
-  .option(
-    "--preset <preset>",
-    `plugin preset: ${capabilitiesLabel()}`,
-    parsePreset,
-  )
   .option(
     "--capabilities <capabilities>",
     "extra capabilities as comma-separated list",
@@ -80,7 +65,6 @@ program
         ts?: boolean;
         js?: boolean;
         yes?: boolean;
-        preset?: Preset;
         capabilities?: Capability[];
         advanced?: boolean;
         sdkVersion?: string;
@@ -93,10 +77,9 @@ program
       const promptDefaults = {
         directory: directoryArg ?? "my-media-plugin",
         language: options.ts ? "ts" : options.js ? "js" : "ts",
-        preset: options.preset ?? DEFAULT_PRESET,
         capabilities: Array.from(
           new Set([
-            options.preset ?? DEFAULT_PRESET,
+            ...DEFAULT_CAPABILITIES,
             ...(options.capabilities ?? []),
           ]),
         ) as Capability[],
@@ -108,7 +91,6 @@ program
 
       let directory = promptDefaults.directory;
       let language = promptDefaults.language as Language;
-      let preset = promptDefaults.preset;
       let capabilities = promptDefaults.capabilities;
       let advanced = promptDefaults.advanced;
       let sdkVersion = promptDefaults.sdkVersion;
@@ -169,7 +151,6 @@ program
         language = answers.language;
         capabilities = (answers.capabilities ??
           promptDefaults.capabilities) as Capability[];
-        preset = capabilities[0] ?? promptDefaults.preset;
         advanced = Boolean(answers.advanced ?? promptDefaults.advanced);
         sdkVersion = answers.sdkVersion ?? promptDefaults.sdkVersion;
       }
@@ -182,7 +163,6 @@ program
         projectName,
         language,
         capabilities,
-        preset,
         advanced,
         sdkVersion,
       });

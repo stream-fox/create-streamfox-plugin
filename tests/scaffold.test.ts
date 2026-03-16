@@ -182,7 +182,7 @@ describe("scaffoldProject", () => {
     expect(readme).toContain("sorts.*");
   });
 
-  it("imports filters when stream capability is selected without catalog", async () => {
+  it("generates minimal stream scaffold when advanced mode is disabled", async () => {
     const base = mkdtempSync(path.join(tmpdir(), "create-streamfox-plugin-"));
     const target = path.join(base, "demo-stream");
 
@@ -200,9 +200,11 @@ describe("scaffoldProject", () => {
       "utf8",
     );
 
-    expect(pluginFile).toContain("definePlugin, filters, ids, settings");
-    expect(pluginFile).toContain('filters.select("quality"');
-    expect(pluginFile).toContain('filters.toggle("hevc"');
-    expect(pluginFile).toContain("request.filters?.find");
+    expect(pluginFile).toContain('import { definePlugin, ids } from "@streamfox/plugin-sdk"');
+    expect(pluginFile).toContain("mediaType: \"movie\"");
+    expect(pluginFile).toContain("transport: { kind: \"http\"");
+    expect(pluginFile).not.toContain("supportedTransports");
+    expect(pluginFile).not.toContain("settings.");
+    expect(pluginFile).not.toContain("filters.");
   });
 });
