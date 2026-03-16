@@ -4,15 +4,21 @@ CLI scaffolder for StreamFox plugin projects.
 
 Generated projects target the current `@streamfox/plugin-sdk` contract:
 
+- manifest-level safety hints (`safety.adult`, `safety.p2p`)
+- first-class manifest configuration schema (`configuration.required`, `configuration.fields`)
 - unified stream transport model (`supportedTransports` + `stream.transport`)
 - unified filters across `catalog`, `stream`, and `subtitles` using `filters.*` helpers
 - richer catalog filters with shared `filterSets` and `sortSets`
-- filter UI metadata support via `isRequired` and `index`
+- filter UI metadata support via `isRequired`, `index`, `maxSelected`, `optionsLimit`, `dynamicOptions`, and conditions (`visibleWhen`/`enabledWhen`)
+- resource-level request guardrails (`idPrefixes`)
+- embedded video stream strategy metadata (`embeddedVideoStreamStrategy`)
+- catalog discovery metadata (`discovery.mode`, `defaultSort`, `defaultFilters`)
+- standardized capability constraints (`accountRequired`, `bandwidth`, geo restrictions)
+- plugin quality signals (`providerSuccessRate`, `timeoutRatio`, `freshnessTimestamp`)
 - exact-or-range numeric catalog filters such as `year=2024` or `year=2000..2024`
 - richer catalog ordering with `sorts.*` helpers
 - richer meta/detail models with `logoURL`, `background`, `runtime`, `releasedAt`, `imdbRating`, `sourceRatings`, structured people credits, `behaviorHints`, and `similarItems`
 - one `id` everywhere for titles, similar items, and videos
-- optional installer config with `configurationRequired`
 - serve integration URLs (`url`, `installURL`, `launchURL`)
 
 ID semantics:
@@ -86,6 +92,7 @@ create-streamfox-plugin streamfox-opensubs \
 ## What Gets Generated
 
 - `src/plugin.(ts|js)` with selected capabilities and handlers
+  - includes `safety`, `configuration`, `capabilityConstraints`, and `qualitySignals`
   - catalog examples use semantic endpoint IDs such as `browse`
   - catalog examples demonstrate shared `filterSets` / `sortSets` and `filters.*` / `sorts.*` helpers
   - stream/subtitles examples include resource-level filters and parsed `request.filters`

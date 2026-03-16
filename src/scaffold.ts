@@ -102,10 +102,17 @@ function resourceBlock(capability: Capability, advanced: boolean): string {
       return `catalog: {
       filterSets: {
         commonCatalogFilters: [
-          filters.select("genre", {
+          filters.multiSelect("genre", {
             label: "Genre",
             index: 0,
             isRequired: true,
+            maxSelected: 3,
+            optionsLimit: 50,
+            dynamicOptions: {
+              source: "provider:genres",
+              cacheTTLSeconds: 86400,
+              fallbackToLastKnown: true,
+            },
             options: [
               { label: "Action", value: "action", aliases: ["Action"] },
               { label: "Drama", value: "drama" },
@@ -157,6 +164,11 @@ ${
           sortSetRefs: ["browseSorts"],
           filters: [filters.intOrRange("year", { index: 2 })],
           paging: { defaultPageSize: 20, maxPageSize: 50 },
+          discovery: {
+            mode: "curated",
+            defaultSort: { key: "popularity", direction: "descending" },
+            defaultFilters: { genre: "action" },
+          },
         },
         {
           id: "episodes",
@@ -167,6 +179,10 @@ ${
               label: "Season",
               group: "episodes",
               index: 0,
+              visibleWhen: {
+                key: "mediaType",
+                equalsAny: ["series"],
+              },
             }),
           ],
           paging: { defaultPageSize: 50, maxPageSize: 200 },
@@ -179,6 +195,8 @@ ${
     case "meta":
       return `meta: {
       mediaTypes: ["movie"],
+      idPrefixes: ["tt"],
+      embeddedVideoStreamStrategy: "merge",
       includes: [
         "videos",
         "links",
@@ -272,6 +290,7 @@ ${
     case "stream":
       return `stream: {
       mediaTypes: ["movie"],
+      idPrefixes: ["tt"],
       supportedTransports: ${advanced ? `["http", "torrent", "usenet", "archive", "youtube"]` : `["http"]`},
       filters: [
         filters.select("quality", {
@@ -287,6 +306,23 @@ ${
           label: "HEVC",
           index: 1,
           defaultValue: false,
+        }),
+        filters.toggle("regionAware", {
+          label: "Region Aware",
+          index: 2,
+          defaultValue: false,
+        }),
+        filters.select("providerRegion", {
+          label: "Provider Region",
+          index: 3,
+          options: [
+            { label: "United States", value: "US" },
+            { label: "Greece", value: "GR" },
+          ],
+          enabledWhen: {
+            key: "regionAware",
+            equalsAny: [true],
+          },
         }),
       ],
       handler: async (request) => {
@@ -332,6 +368,7 @@ ${
     case "subtitles":
       return `subtitles: {
       mediaTypes: ["movie", "episode"],
+      idPrefixes: ["tt"],
       defaultLanguages: ["en"],
       filters: [
         filters.select("source", {
@@ -402,17 +439,9 @@ ${
   }
 }
 
-function makeInstallBlock(capabilities: Capability[]): string {
-  if (!capabilities.includes("subtitles")) {
-    return "";
-  }
-
-  return `  install: {
-    configurationRequired: true,
-    title: "Subtitle Settings",
-    description: "Configure subtitle defaults before installing this plugin.",
-    fields: [
-      settings.multiSelect("languages", {
+function makeConfigurationBlock(capabilities: Capability[]): string {
+  const subtitlesFields = capabilities.includes("subtitles")
+    ? `      settings.multiSelect("languages", {
         label: "Languages",
         options: [
           { label: "English", value: "en" },
@@ -420,12 +449,37 @@ function makeInstallBlock(capabilities: Capability[]): string {
           { label: "Spanish", value: "es" },
         ],
         defaultValue: ["en"],
+        maxSelected: 3,
       }),
       settings.checkbox("includeHI", {
         label: "Include hearing impaired",
         defaultValue: true,
       }),
-    ],
+`
+    : "";
+
+  return `  configuration: {
+    required: true,
+    fields: [
+      settings.password("apiKey", {
+        label: "API Key",
+        required: true,
+      }),
+      settings.select("quality", {
+        label: "Quality",
+        options: [
+          { label: "1080p", value: "1080p" },
+          { label: "720p", value: "720p" },
+        ],
+        defaultValue: "1080p",
+      }),
+      settings.number("maxResults", {
+        label: "Max Results",
+        min: 1,
+        max: 100,
+        defaultValue: 20,
+      }),
+${subtitlesFields}    ],
   },
 `;
 }
@@ -438,7 +492,7 @@ function makePluginFile(
   const resources = capabilities
     .map((capability) => resourceBlock(capability, advanced))
     .join("\n    ");
-  const install = makeInstallBlock(capabilities);
+  const configuration = makeConfigurationBlock(capabilities);
   const importSpec = [
     "definePlugin",
     capabilities.some(
@@ -450,11 +504,10 @@ function makePluginFile(
       ? "filters"
       : undefined,
     capabilities.includes("catalog") ? "sorts" : undefined,
-    install.length > 0 ? "settings" : undefined,
+    "settings",
   ]
     .filter((value): value is string => Boolean(value))
     .join(", ");
-  const installBlock = install.length > 0 ? `${install}` : "";
 
   return `import { ${importSpec} } from "@streamfox/plugin-sdk";
 
@@ -465,7 +518,23 @@ export const plugin = definePlugin({
     version: "0.1.0",
     description: "Generated StreamFox plugin scaffold",
   },
-${installBlock}  resources: {
+  safety: {
+    adult: false,
+    p2p: ${capabilities.includes("stream") ? "true" : "false"},
+  },
+  capabilityConstraints: {
+    accountRequired: true,
+    bandwidth: "${capabilities.includes("stream") ? "high" : "medium"}",
+    geo: {
+      allowedRegions: ["US", "GR"],
+    },
+  },
+  qualitySignals: {
+    providerSuccessRate: 0.98,
+    timeoutRatio: 0.02,
+    freshnessTimestamp: "2026-03-15T00:00:00.000Z",
+  },
+${configuration}  resources: {
     ${resources}
   },
 });
@@ -588,6 +657,19 @@ Advanced template: \`${advanced ? "enabled" : "disabled"}\`
 
 ${capabilitiesList}
 
+## Manifest Safety + Constraints
+
+- \`safety.adult\` and \`safety.p2p\` for install-time trust badges
+- \`capabilityConstraints.accountRequired\`, \`bandwidth\`, and geo region restrictions
+- \`qualitySignals\` for reliability-aware plugin ranking
+
+## Configuration Schema
+
+- First-class manifest \`configuration\` schema (no legacy installer field shims)
+- Typed fields for \`apiKey\`, \`quality\`, and \`maxResults\`
+- Configuration required gate via \`configuration.required\`
+- Runtime settings parsing stays typed in handler context (\`context.settings\`)
+
 ## Stream Model
 
 - Unified transport model via \`stream.transport\`
@@ -621,6 +703,9 @@ ${capabilitiesList}
   - \`GET /subtitles/movie/tt0133093?source=opensubtitles&hearingImpaired=true\`
 - Use shared \`filterSets\`, \`sortSets\`, \`filters.*\`, and \`sorts.*\` helpers when defining controls
 - Use \`isRequired\` for always-present filters and \`index\` for deterministic filter ordering
+- Use \`maxSelected\` for multi-select request guardrails and \`optionsLimit\` for bounded option sets
+- Use \`dynamicOptions\` for provider-fetched options with cache and fallback controls
+- Use \`visibleWhen\` / \`enabledWhen\` conditions for context-aware filter UX
 - Query values normalize to canonical option values when aliases are declared
 
 ## Endpoints

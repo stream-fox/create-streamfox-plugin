@@ -116,7 +116,8 @@ describe("scaffoldProject", () => {
     expect(pluginFile).toContain("request.filters?.find");
     expect(pluginFile).toContain("Array.isArray(settings?.languages)");
     expect(pluginFile).toContain("void settings?.includeHI");
-    expect(pluginFile).toContain("configurationRequired: true");
+    expect(pluginFile).toContain("configuration: {");
+    expect(pluginFile).toContain("required: true");
   });
 
   it("generates catalog scaffolds with shared filter sets and helper builders", async () => {
@@ -137,7 +138,7 @@ describe("scaffoldProject", () => {
       "utf8",
     );
 
-    expect(pluginFile).toContain("definePlugin, filters");
+    expect(pluginFile).toContain("definePlugin, filters, sorts, settings");
     expect(pluginFile).toContain("sorts");
     expect(pluginFile).toContain("filterSets:");
     expect(pluginFile).toContain("sortSets:");
@@ -198,7 +199,7 @@ describe("scaffoldProject", () => {
       "utf8",
     );
 
-    expect(pluginFile).toContain("definePlugin, filters");
+    expect(pluginFile).toContain("definePlugin, filters, settings");
     expect(pluginFile).toContain('filters.select("quality"');
     expect(pluginFile).toContain('filters.toggle("hevc"');
     expect(pluginFile).toContain("request.filters?.find");
