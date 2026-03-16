@@ -631,6 +631,8 @@ function makeReadme(
       case "plugin_catalog":
         return "/plugin_catalog/:catalogID/:pluginKind";
     }
+
+    return assertNeverCapability(capability);
   };
 
   const endpointLines = [
