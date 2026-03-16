@@ -16,7 +16,7 @@ describe("scaffoldProject", () => {
       language: "ts",
       capabilities: ["subtitles", "meta"],
       advanced: true,
-      sdkVersion: "^0.6.1",
+      sdkVersion: "^0.6.2",
     });
 
     expect(existsSync(path.join(target, "package.json"))).toBe(true);
@@ -28,7 +28,7 @@ describe("scaffoldProject", () => {
       path.join(target, "package.json"),
       "utf8",
     );
-    expect(packageJson).toContain('"@streamfox/plugin-sdk": "^0.6.1"');
+    expect(packageJson).toContain('"@streamfox/plugin-sdk": "^0.6.2"');
     expect(packageJson).not.toContain("prettier");
     expect(packageJson).not.toContain('"format"');
     expect(packageJson).not.toContain('"format:check"');
@@ -101,14 +101,19 @@ describe("scaffoldProject", () => {
       language: "ts",
       capabilities: ["meta", "subtitles"],
       advanced: true,
-      sdkVersion: "^0.6.1",
+      sdkVersion: "^0.6.2",
     });
 
     const pluginFile = await readFile(
       path.join(target, "src", "plugin.ts"),
       "utf8",
     );
+    expect(pluginFile).toContain("definePlugin, filters, settings");
     expect(pluginFile).toContain('settings.multiSelect("languages"');
+    expect(pluginFile).toContain('filters.select("source"');
+    expect(pluginFile).toContain('filters.toggle("hearingImpaired"');
+    expect(pluginFile).toContain("isRequired: true");
+    expect(pluginFile).toContain("request.filters?.find");
     expect(pluginFile).toContain("Array.isArray(settings?.languages)");
     expect(pluginFile).toContain("void settings?.includeHI");
     expect(pluginFile).toContain("configurationRequired: true");
@@ -124,7 +129,7 @@ describe("scaffoldProject", () => {
       language: "ts",
       capabilities: ["catalog"],
       advanced: true,
-      sdkVersion: "^0.6.1",
+      sdkVersion: "^0.6.2",
     });
 
     const pluginFile = await readFile(
@@ -140,23 +145,62 @@ describe("scaffoldProject", () => {
     expect(pluginFile).toContain('id: "browse"');
     expect(pluginFile).toContain('id: "episodes"');
     expect(pluginFile).toContain('filters.select("language"');
-    expect(pluginFile).toContain('filters.intOrRange("year")');
+    expect(pluginFile).toContain("isRequired: true");
+    expect(pluginFile).toContain('filters.intOrRange("year", { index: 2 })');
     expect(pluginFile).toContain('filters.number("season"');
     expect(pluginFile).toContain('sorts.desc("popularity"');
     expect(pluginFile).toContain('sortSetRefs: ["browseSorts"]');
 
     const readme = await readFile(path.join(target, "README.md"), "utf8");
-    expect(readme).toContain("GET /catalog/movie/browse?language=ja");
-    expect(readme).toContain("GET /catalog/movie/browse?year=2024");
-    expect(readme).toContain("GET /catalog/movie/browse?year=2000..2024");
-    expect(readme).toContain("GET /catalog/movie/browse?orderBy=popular");
+    expect(readme).toContain(
+      "GET /catalog/movie/browse?genre=action&language=ja",
+    );
+    expect(readme).toContain(
+      "GET /catalog/movie/browse?genre=action&year=2024",
+    );
+    expect(readme).toContain(
+      "GET /catalog/movie/browse?genre=action&year=2000..2024",
+    );
+    expect(readme).toContain(
+      "GET /catalog/movie/browse?genre=action&orderBy=popular",
+    );
     expect(readme).toContain("GET /catalog/series/episodes?season=1");
     expect(readme).toContain(
       "GET /catalog/series/episodes` to return all episodes when no season is provided",
+    );
+    expect(readme).toContain("isRequired");
+    expect(readme).toContain("index");
+    expect(readme).toContain("GET /stream/movie/tt0133093?quality=1080p");
+    expect(readme).toContain(
+      "GET /subtitles/movie/tt0133093?source=opensubtitles",
     );
     expect(readme).toContain("filterSets");
     expect(readme).toContain("filters.*");
     expect(readme).toContain("sortSets");
     expect(readme).toContain("sorts.*");
+  });
+
+  it("imports filters when stream capability is selected without catalog", async () => {
+    const base = mkdtempSync(path.join(tmpdir(), "create-streamfox-plugin-"));
+    const target = path.join(base, "demo-stream");
+
+    await scaffoldProject({
+      targetDir: target,
+      projectName: "demo-stream",
+      language: "ts",
+      capabilities: ["stream"],
+      advanced: false,
+      sdkVersion: "^0.6.2",
+    });
+
+    const pluginFile = await readFile(
+      path.join(target, "src", "plugin.ts"),
+      "utf8",
+    );
+
+    expect(pluginFile).toContain("definePlugin, filters");
+    expect(pluginFile).toContain('filters.select("quality"');
+    expect(pluginFile).toContain('filters.toggle("hevc"');
+    expect(pluginFile).toContain("request.filters?.find");
   });
 });

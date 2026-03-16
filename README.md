@@ -5,9 +5,11 @@ CLI scaffolder for StreamFox plugin projects.
 Generated projects target the current `@streamfox/plugin-sdk` contract:
 
 - unified stream transport model (`supportedTransports` + `stream.transport`)
-- richer catalog filters with shared `filterSets` and `filters.*` helpers
+- unified filters across `catalog`, `stream`, and `subtitles` using `filters.*` helpers
+- richer catalog filters with shared `filterSets` and `sortSets`
+- filter UI metadata support via `isRequired` and `index`
 - exact-or-range numeric catalog filters such as `year=2024` or `year=2000..2024`
-- richer catalog ordering with shared `sortSets` and `sorts.*` helpers
+- richer catalog ordering with `sorts.*` helpers
 - richer meta/detail models with `logoURL`, `background`, `runtime`, `releasedAt`, `imdbRating`, `sourceRatings`, structured people credits, `behaviorHints`, and `similarItems`
 - one `id` everywhere for titles, similar items, and videos
 - optional installer config with `configurationRequired`
@@ -64,7 +66,7 @@ create-streamfox-plugin my-plugin --yes
 | `--preset <preset>`      | enum          | `meta`                 | Legacy/compat primary template hint. Interactive mode now asks for capabilities directly.  |
 | `--capabilities <a,b,c>` | csv enum list | `meta`                 | Selected capabilities. One of: `catalog`, `meta`, `stream`, `subtitles`, `plugin_catalog`. |
 | `--advanced`             | flag          | `false`                | Generate richer examples (torrent/usenet/archive/trailers/distribution).                   |
-| `--sdk-version <range>`  | string        | `^0.6.1`               | Dependency range for `@streamfox/plugin-sdk`.                                              |
+| `--sdk-version <range>`  | string        | `^0.6.2`               | Dependency range for `@streamfox/plugin-sdk`.                                              |
 | `--yes`                  | flag          | `false`                | Skip prompts and use provided/default values.                                              |
 | `-v, --version`          | flag          | no                     | Display the current CLI version.                                                           |
 
@@ -77,7 +79,7 @@ create-streamfox-plugin streamfox-opensubs \
   --ts \
   --capabilities subtitles,meta,stream \
   --advanced \
-  --sdk-version ^0.6.1 \
+  --sdk-version ^0.6.2 \
   --yes
 ```
 
@@ -86,6 +88,7 @@ create-streamfox-plugin streamfox-opensubs \
 - `src/plugin.(ts|js)` with selected capabilities and handlers
   - catalog examples use semantic endpoint IDs such as `browse`
   - catalog examples demonstrate shared `filterSets` / `sortSets` and `filters.*` / `sorts.*` helpers
+  - stream/subtitles examples include resource-level filters and parsed `request.filters`
 - `src/server.(ts|js)` that calls `serve(...)` and prints:
   - manifest URL
   - install deeplink URL

@@ -12,7 +12,7 @@ export type Capability = (typeof CAPABILITIES)[number];
 export type Preset = Capability;
 export type Language = "ts" | "js";
 export const DEFAULT_PRESET: Preset = "meta";
-export const DEFAULT_SDK_VERSION = "^0.6.1";
+export const DEFAULT_SDK_VERSION = "^0.6.2";
 
 export interface ScaffoldOptions {
   targetDir: string;
@@ -104,6 +104,8 @@ function resourceBlock(capability: Capability, advanced: boolean): string {
         commonCatalogFilters: [
           filters.select("genre", {
             label: "Genre",
+            index: 0,
+            isRequired: true,
             options: [
               { label: "Action", value: "action", aliases: ["Action"] },
               { label: "Drama", value: "drama" },
@@ -114,6 +116,7 @@ ${
     ? `          filters.select("language", {
             label: "Language",
             group: "regional",
+            index: 1,
             options: [
               { label: "Japanese", value: "ja", aliases: ["Japanese (ja)"] },
               { label: "English", value: "en", aliases: ["English (en)"] },
@@ -152,7 +155,7 @@ ${
           mediaTypes: ["movie"],
           filterSetRefs: ["commonCatalogFilters"],
           sortSetRefs: ["browseSorts"],
-          filters: [filters.intOrRange("year")],
+          filters: [filters.intOrRange("year", { index: 2 })],
           paging: { defaultPageSize: 20, maxPageSize: 50 },
         },
         {
@@ -163,6 +166,7 @@ ${
             filters.number("season", {
               label: "Season",
               group: "episodes",
+              index: 0,
             }),
           ],
           paging: { defaultPageSize: 50, maxPageSize: 200 },
@@ -269,15 +273,39 @@ ${
       return `stream: {
       mediaTypes: ["movie"],
       supportedTransports: ${advanced ? `["http", "torrent", "usenet", "archive", "youtube"]` : `["http"]`},
-      handler: async () => ({
-        streams: [
-          {
-            transport: { kind: "http", url: "https://example.com/video.mp4", mode: "stream" },
-            hints: {
-              notWebReady: true,
-              proxyHeaders: { request: { "User-Agent": "StreamFox" } },
+      filters: [
+        filters.select("quality", {
+          label: "Quality",
+          index: 0,
+          isRequired: true,
+          options: [
+            { label: "1080p", value: "1080p" },
+            { label: "720p", value: "720p" },
+          ],
+        }),
+        filters.toggle("hevc", {
+          label: "HEVC",
+          index: 1,
+          defaultValue: false,
+        }),
+      ],
+      handler: async (request) => {
+        const qualityFilter = request.filters?.find((filter) => filter.key === "quality");
+        const requestedQuality = qualityFilter?.value.kind === "string"
+          ? qualityFilter.value.string
+          : undefined;
+
+        void requestedQuality;
+
+        return {
+          streams: [
+            {
+              transport: { kind: "http", url: "https://example.com/video.mp4", mode: "stream" },
+              hints: {
+                notWebReady: true,
+                proxyHeaders: { request: { "User-Agent": "StreamFox" } },
+              },
             },
-          },
 ${
   advanced
     ? `          {
@@ -297,21 +325,43 @@ ${
           },
 `
     : ""
-}        ],
-      }),
+}          ],
+        };
+      },
     },`;
     case "subtitles":
       return `subtitles: {
       mediaTypes: ["movie", "episode"],
       defaultLanguages: ["en"],
+      filters: [
+        filters.select("source", {
+          label: "Source",
+          index: 0,
+          isRequired: true,
+          options: [
+            { label: "OpenSubtitles", value: "opensubtitles" },
+            { label: "SubDL", value: "subdl" },
+          ],
+        }),
+        filters.toggle("hearingImpaired", {
+          label: "Hearing Impaired",
+          index: 1,
+          defaultValue: false,
+        }),
+      ],
       handler: async (request, { settings }) => {
         const configuredLanguages = Array.isArray(settings?.languages)
           ? settings.languages
           : [];
         const languagePreferences =
           configuredLanguages.length > 0 ? configuredLanguages : (request.languagePreferences ?? []);
+        const sourceFilter = request.filters?.find((filter) => filter.key === "source");
+        const selectedSource = sourceFilter?.value.kind === "string"
+          ? sourceFilter.value.string
+          : undefined;
 
         void languagePreferences;
+        void selectedSource;
         void settings?.includeHI;
 
         return {
@@ -391,7 +441,14 @@ function makePluginFile(
   const install = makeInstallBlock(capabilities);
   const importSpec = [
     "definePlugin",
-    capabilities.includes("catalog") ? "filters" : undefined,
+    capabilities.some(
+      (capability) =>
+        capability === "catalog" ||
+        capability === "stream" ||
+        capability === "subtitles",
+    )
+      ? "filters"
+      : undefined,
     capabilities.includes("catalog") ? "sorts" : undefined,
     install.length > 0 ? "settings" : undefined,
   ]
@@ -549,18 +606,21 @@ ${capabilitiesList}
 - Video IDs identify the video resource, for example \`main\` or \`tt8599532:1:4\`
 - Recommended episodic video ID format: \`{parentMediaID}:{season}:{episode}\`
 
-## Catalog Filters
+## Unified Filters
 
 - Prefer semantic catalog IDs such as \`discover\`, \`popular\`, and \`search\`
 - Keep variable filters in the query string, for example:
-  - \`GET /catalog/movie/browse?language=ja\`
-  - \`GET /catalog/movie/browse?year=2024\`
-  - \`GET /catalog/movie/browse?year=2000..2024\`
-  - \`GET /catalog/movie/browse?query=matrix\`
-  - \`GET /catalog/movie/browse?orderBy=popular\`
+  - \`GET /catalog/movie/browse?genre=action&language=ja\`
+  - \`GET /catalog/movie/browse?genre=action&year=2024\`
+  - \`GET /catalog/movie/browse?genre=action&year=2000..2024\`
+  - \`GET /catalog/movie/browse?genre=action&query=matrix\`
+  - \`GET /catalog/movie/browse?genre=action&orderBy=popular\`
   - \`GET /catalog/series/episodes?season=1\`
   - \`GET /catalog/series/episodes\` to return all episodes when no season is provided
-- Use shared \`filterSets\`, \`sortSets\`, \`filters.*\`, and \`sorts.*\` helpers when defining catalog controls
+  - \`GET /stream/movie/tt0133093?quality=1080p&hevc=false\`
+  - \`GET /subtitles/movie/tt0133093?source=opensubtitles&hearingImpaired=true\`
+- Use shared \`filterSets\`, \`sortSets\`, \`filters.*\`, and \`sorts.*\` helpers when defining controls
+- Use \`isRequired\` for always-present filters and \`index\` for deterministic filter ordering
 - Query values normalize to canonical option values when aliases are declared
 
 ## Endpoints
