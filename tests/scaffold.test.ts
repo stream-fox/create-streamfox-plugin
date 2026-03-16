@@ -45,8 +45,9 @@ describe("scaffoldProject", () => {
     expect(pluginFile).toContain('"writers"');
     expect(pluginFile).toContain('"behaviorHints"');
     expect(pluginFile).toContain("similarItems:");
-    expect(pluginFile).toContain('id: "tt1254207"');
-    expect(pluginFile).toContain('id: "tt0472033"');
+    expect(pluginFile).toContain('id: ids.imdb("tt1254207")');
+    expect(pluginFile).toContain('id: ids.imdb("tt0472033")');
+    expect(pluginFile).toContain('id: ids.video("main")');
     expect(pluginFile).toContain("logoURL:");
     expect(pluginFile).toContain("background:");
     expect(pluginFile).toContain("dvdReleaseAt:");
@@ -86,7 +87,7 @@ describe("scaffoldProject", () => {
     expect(readme).toContain("firstAiredAt");
     expect(readme).toContain("imdbRating");
     expect(readme).toContain("sourceRatings");
-    expect(readme).toContain("one `id` everywhere");
+    expect(readme).toContain("typed ID helpers");
     expect(readme).toContain("npm run check");
     expect(readme).not.toContain("npm run format");
   });
@@ -108,7 +109,7 @@ describe("scaffoldProject", () => {
       path.join(target, "src", "plugin.ts"),
       "utf8",
     );
-    expect(pluginFile).toContain("definePlugin, filters, settings");
+    expect(pluginFile).toContain("definePlugin, filters, ids, settings");
     expect(pluginFile).toContain('settings.multiSelect("languages"');
     expect(pluginFile).toContain('filters.select("source"');
     expect(pluginFile).toContain('filters.toggle("hearingImpaired"');
@@ -138,13 +139,13 @@ describe("scaffoldProject", () => {
       "utf8",
     );
 
-    expect(pluginFile).toContain("definePlugin, filters, sorts, settings");
+    expect(pluginFile).toContain("definePlugin, filters, sorts, ids, settings");
     expect(pluginFile).toContain("sorts");
     expect(pluginFile).toContain("filterSets:");
     expect(pluginFile).toContain("sortSets:");
     expect(pluginFile).toContain("commonCatalogFilters");
-    expect(pluginFile).toContain('id: "browse"');
-    expect(pluginFile).toContain('id: "episodes"');
+    expect(pluginFile).toContain('id: ids.catalog("browse")');
+    expect(pluginFile).toContain('id: ids.catalog("episodes")');
     expect(pluginFile).toContain('filters.select("language"');
     expect(pluginFile).toContain("isRequired: true");
     expect(pluginFile).toContain('filters.intOrRange("year", { index: 2 })');
@@ -199,7 +200,7 @@ describe("scaffoldProject", () => {
       "utf8",
     );
 
-    expect(pluginFile).toContain("definePlugin, filters, settings");
+    expect(pluginFile).toContain("definePlugin, filters, ids, settings");
     expect(pluginFile).toContain('filters.select("quality"');
     expect(pluginFile).toContain('filters.toggle("hevc"');
     expect(pluginFile).toContain("request.filters?.find");

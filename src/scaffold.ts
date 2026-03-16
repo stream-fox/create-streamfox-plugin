@@ -25,6 +25,10 @@ export interface ScaffoldOptions {
   sdkVersion?: string;
 }
 
+function assertNeverCapability(value: never): never {
+  throw new Error(`Unsupported capability '${String(value)}'`);
+}
+
 function sortedCapabilities(values: Capability[]): Capability[] {
   const unique = Array.from(new Set(values));
   return CAPABILITIES.filter((capability) => unique.includes(capability));
@@ -157,7 +161,7 @@ ${
       },
       endpoints: [
         {
-          id: "browse",
+          id: ids.catalog("browse"),
           name: "Browse",
           mediaTypes: ["movie"],
           filterSetRefs: ["commonCatalogFilters"],
@@ -171,7 +175,7 @@ ${
           },
         },
         {
-          id: "episodes",
+          id: ids.catalog("episodes"),
           name: "Episodes",
           mediaTypes: ["series"],
           filters: [
@@ -214,7 +218,7 @@ ${
           advanced
             ? `{
           summary: {
-            id: "tt1254207",
+            id: ids.imdb("tt1254207"),
             mediaType: "movie",
             title: "Big Buck Bunny",
             yearLabel: "2008",
@@ -259,22 +263,22 @@ ${
           writers: [
             { name: "Sacha Goedegebure" },
           ],
-          defaultVideoID: "main",
+          defaultVideoID: ids.video("main"),
           behaviorHints: {
-            defaultVideoId: "main",
+            defaultVideoId: ids.video("main"),
             hasScheduledVideos: false,
           },
           trailers: [{ transport: { kind: "youtube", id: "aqz-KE-bpKQ" } }],
           similarItems: [
             {
-              id: "tt0472033",
+              id: ids.imdb("tt0472033"),
               mediaType: "movie",
               title: "Big Buck Bunny Short",
             },
           ],
           videos: [
             {
-              id: "main",
+              id: ids.video("main"),
               title: "Main",
               releasedAt: "2008-05-30T00:00:00.000Z",
               firstAiredAt: "2008-05-30T00:00:00.000Z",
@@ -410,7 +414,7 @@ ${
       return `pluginCatalog: {
       endpoints: [
         {
-          id: "featured",
+          id: ids.catalog("featured"),
           name: "Featured",
           pluginKinds: ["catalog", "meta", "stream", "subtitles"],
           tags: ["official"],
@@ -419,7 +423,7 @@ ${
       handler: async () => ({
         plugins: [
           {
-            id: "com.example.recommended",
+            id: ids.plugin("com.example.recommended"),
             name: "Recommended",
             version: "1.0.0",
             pluginKinds: ["catalog", "meta"],
@@ -428,15 +432,15 @@ ${
               manifestURL: "https://plugins.example.com/recommended/manifest",
             },
             manifestSnapshot: {
-              plugin: { id: "com.example.recommended" },
+              plugin: { id: ids.plugin("com.example.recommended") },
             },
           },
         ],
       }),
     },`;
-    default:
-      return "";
   }
+
+  return assertNeverCapability(capability);
 }
 
 function makeConfigurationBlock(capabilities: Capability[]): string {
@@ -504,6 +508,7 @@ function makePluginFile(
       ? "filters"
       : undefined,
     capabilities.includes("catalog") ? "sorts" : undefined,
+    "ids",
     "settings",
   ]
     .filter((value): value is string => Boolean(value))
@@ -513,7 +518,7 @@ function makePluginFile(
 
 export const plugin = definePlugin({
   plugin: {
-    id: "com.example.${name}",
+    id: ids.plugin("com.example.${name}"),
     name: "${name}",
     version: "0.1.0",
     description: "Generated StreamFox plugin scaffold",
@@ -625,8 +630,6 @@ function makeReadme(
         return "/subtitles/:mediaType/:itemID";
       case "plugin_catalog":
         return "/plugin_catalog/:catalogID/:pluginKind";
-      default:
-        return `/${capability}`;
     }
   };
 
@@ -683,7 +686,8 @@ ${capabilitiesList}
 - Detail responses can expose \`country\`, \`language\`, \`awards\`, \`cast\`, \`directors\`, \`writers\`, \`behaviorHints\`, \`similarItems\`, \`imdbRating\`, and \`sourceRatings\`
 - Video entries support both \`releasedAt\` and \`firstAiredAt\` plus optional \`rating\`
 - Use \`trailers\` only; there is no separate \`trailerStreams\` field
-- Use one \`id\` everywhere for titles, similar items, and videos
+- Use typed ID helpers: \`ids.plugin(...)\`, \`ids.catalog(...)\`, \`ids.item(...)\`, \`ids.video(...)\`
+- Use \`ids.imdb(...)\` for strict IMDb IDs (\`tt\` + digits)
 - Media/title IDs identify the title itself, for example \`tt1254207\`
 - Video IDs identify the video resource, for example \`main\` or \`tt8599532:1:4\`
 - Recommended episodic video ID format: \`{parentMediaID}:{season}:{episode}\`

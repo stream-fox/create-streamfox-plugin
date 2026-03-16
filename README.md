@@ -18,13 +18,14 @@ Generated projects target the current `@streamfox/plugin-sdk` contract:
 - exact-or-range numeric catalog filters such as `year=2024` or `year=2000..2024`
 - richer catalog ordering with `sorts.*` helpers
 - richer meta/detail models with `logoURL`, `background`, `runtime`, `releasedAt`, `imdbRating`, `sourceRatings`, structured people credits, `behaviorHints`, and `similarItems`
-- one `id` everywhere for titles, similar items, and videos
+- strong ID helpers (`ids.plugin`, `ids.catalog`, `ids.item`, `ids.video`, `ids.imdb`)
 - serve integration URLs (`url`, `installURL`, `launchURL`)
 
 ID semantics:
 
 - media/title IDs identify the title itself, for example `tt1254207`
 - video IDs identify the video resource, for example `main` or `tt8599532:1:4`
+- strict IMDb IDs use `tt` + digits (`ids.imdb("tt0133093")`)
 
 Recommended episodic video ID format:
 
