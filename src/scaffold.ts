@@ -12,7 +12,7 @@ export type Capability = (typeof CAPABILITIES)[number];
 export type Preset = Capability;
 export type Language = "ts" | "js";
 export const DEFAULT_PRESET: Preset = "meta";
-export const DEFAULT_SDK_VERSION = "^0.6.2";
+export const DEFAULT_SDK_VERSION = "^0.7.0";
 
 export interface ScaffoldOptions {
   targetDir: string;
