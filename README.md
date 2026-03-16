@@ -66,9 +66,9 @@ create-streamfox-plugin my-plugin --yes
 | `[directory]`            | positional    | `my-media-plugin`      | Output directory.                                                                          |
 | `--ts`                   | flag          | `true` (unless `--js`) | Generate TypeScript template.                                                              |
 | `--js`                   | flag          | no                     | Generate JavaScript template.                                                              |
-| `--capabilities <a,b,c>` | csv enum list | `meta`                 | Selected capabilities. One of: `catalog`, `meta`, `stream`, `subtitles`, `plugin_catalog`. |
-| `--advanced`             | flag          | `false`                | Generate richer examples (advanced metadata/filters/transports).                            |
-| `--sdk-version <range>`  | string        | `^0.7.0`               | Dependency range for `@streamfox/plugin-sdk`.                                               |
+| `--capabilities <a,b,c>` | csv enum list | none                   | Selected capabilities. One of: `catalog`, `meta`, `stream`, `subtitles`, `plugin_catalog`. |
+| `--advanced`             | flag          | `false`                | Generate richer examples (advanced metadata/filters/transports).                           |
+| `--sdk-version <range>`  | string        | `^0.7.1`               | Dependency range for `@streamfox/plugin-sdk`.                                              |
 | `--yes`                  | flag          | `false`                | Skip prompts and use provided/default values.                                              |
 | `-v, --version`          | flag          | no                     | Display the current CLI version.                                                           |
 
@@ -81,7 +81,7 @@ create-streamfox-plugin streamfox-opensubs \
   --ts \
   --capabilities subtitles,meta,stream \
   --advanced \
-  --sdk-version ^0.7.0 \
+  --sdk-version ^0.7.1 \
   --yes
 ```
 

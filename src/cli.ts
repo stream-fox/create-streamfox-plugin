@@ -4,7 +4,6 @@ import prompts from "prompts";
 import packageJSON from "../package.json";
 import {
   CAPABILITIES,
-  DEFAULT_CAPABILITIES,
   DEFAULT_SDK_VERSION,
   scaffoldProject,
   type Capability,
@@ -48,7 +47,7 @@ program
   .option("--js", "use JavaScript template")
   .option(
     "--capabilities <capabilities>",
-    "extra capabilities as comma-separated list",
+    "capabilities as comma-separated list",
     parseCapabilitiesList,
   )
   .option("--advanced", "generate advanced capability examples")
@@ -77,12 +76,7 @@ program
       const promptDefaults = {
         directory: directoryArg ?? "my-media-plugin",
         language: options.ts ? "ts" : options.js ? "js" : "ts",
-        capabilities: Array.from(
-          new Set([
-            ...DEFAULT_CAPABILITIES,
-            ...(options.capabilities ?? []),
-          ]),
-        ) as Capability[],
+        capabilities: (options.capabilities ?? []) as Capability[],
         advanced: options.advanced ?? false,
         sdkVersion: options.sdkVersion ?? DEFAULT_SDK_VERSION,
       };
@@ -96,7 +90,7 @@ program
       let sdkVersion = promptDefaults.sdkVersion;
 
       if (shouldPrompt) {
-        const answers = await prompts(
+        const baseAnswers = await prompts(
           [
             {
               type: "text",
@@ -121,12 +115,33 @@ program
               choices: CAPABILITIES.map((capability) => ({
                 title: capability,
                 value: capability,
-                selected: capabilities.includes(capability),
+                selected: false,
               })),
               instructions: false,
-              min: 1,
-              hint: "Space to select",
+              initial: 0,
+              hint: "Space to select, Enter to continue",
             },
+          ],
+          {
+            onCancel: () => {
+              process.exit(1);
+            },
+          },
+        );
+
+        directory = baseAnswers.directory;
+        language = baseAnswers.language;
+        capabilities = (baseAnswers.capabilities ??
+          promptDefaults.capabilities) as Capability[];
+
+        if (capabilities.length === 0) {
+          throw new InvalidArgumentError(
+            "Select at least one capability using the prompt or --capabilities.",
+          );
+        }
+
+        const detailAnswers = await prompts(
+          [
             {
               type: "confirm",
               name: "advanced",
@@ -147,12 +162,14 @@ program
           },
         );
 
-        directory = answers.directory;
-        language = answers.language;
-        capabilities = (answers.capabilities ??
-          promptDefaults.capabilities) as Capability[];
-        advanced = Boolean(answers.advanced ?? promptDefaults.advanced);
-        sdkVersion = answers.sdkVersion ?? promptDefaults.sdkVersion;
+        advanced = Boolean(detailAnswers.advanced ?? promptDefaults.advanced);
+        sdkVersion = detailAnswers.sdkVersion ?? promptDefaults.sdkVersion;
+      }
+
+      if (capabilities.length === 0) {
+        throw new InvalidArgumentError(
+          "Select at least one capability using the prompt or --capabilities.",
+        );
       }
 
       const targetDir = path.resolve(process.cwd(), directory);

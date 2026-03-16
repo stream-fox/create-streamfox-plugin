@@ -200,9 +200,11 @@ describe("scaffoldProject", () => {
       "utf8",
     );
 
-    expect(pluginFile).toContain('import { definePlugin, ids } from "@streamfox/plugin-sdk"');
-    expect(pluginFile).toContain("mediaType: \"movie\"");
-    expect(pluginFile).toContain("transport: { kind: \"http\"");
+    expect(pluginFile).toContain(
+      'import { definePlugin, ids } from "@streamfox/plugin-sdk"',
+    );
+    expect(pluginFile).toContain('mediaType: "movie"');
+    expect(pluginFile).toContain('transport: { kind: "http"');
     expect(pluginFile).not.toContain("supportedTransports");
     expect(pluginFile).not.toContain("settings.");
     expect(pluginFile).not.toContain("filters.");
